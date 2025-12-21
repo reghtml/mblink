@@ -160,3 +160,7 @@ func (_this *MiniblinkBrowser) MouseEnable(b bool) {
 func (_this *MiniblinkBrowser) SetBmpPaintMode(b bool) {
 	_this.core.SetBmpPaintMode(b)
 }
+
+func (_this *MiniblinkBrowser) ShowDevTools(path string) {
+	_this.core.ShowDevTools(path)
+}

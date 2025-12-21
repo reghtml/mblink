@@ -2,15 +2,16 @@ package GoMiniblink
 
 import (
 	"fmt"
-	fm "github.com/reghtml/mblink/forms"
-	cs "github.com/reghtml/mblink/forms/controls"
-	win "github.com/reghtml/mblink/forms/windows/win32"
 	"image"
 	"math"
 	"strconv"
 	"strings"
 	"time"
 	"unsafe"
+
+	fm "github.com/reghtml/mblink/forms"
+	cs "github.com/reghtml/mblink/forms/controls"
+	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
 var fnCall = "fn" + strconv.FormatInt(time.Now().UnixNano(), 32)
@@ -600,4 +601,8 @@ func (_this *freeMiniblink) viewFocus() {
 
 func (_this *freeMiniblink) GetHandle() wkeHandle {
 	return _this.wke
+}
+
+func (_this *freeMiniblink) ShowDevTools(path string) {
+	mbApi.wkeSetDebugConfig(_this.wke, "showDevTools", path)
 }

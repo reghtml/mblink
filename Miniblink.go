@@ -27,4 +27,5 @@ type Miniblink interface {
 	SetOnPaintUpdated(callback PaintUpdatedCallback)
 	LoadUri(uri string)
 	GetHandle() wkeHandle
+	ShowDevTools(path string)
 }
