@@ -2,6 +2,7 @@ package GoMiniblink
 
 import (
 	"fmt"
+
 	fm "github.com/reghtml/mblink/forms"
 	br "github.com/reghtml/mblink/forms/bridge"
 	cs "github.com/reghtml/mblink/forms/controls"
@@ -53,6 +54,10 @@ func (_this *MiniblinkForm) InitEx(param br.FormParam) *MiniblinkForm {
 		e.RunJs("window.setFormButton();window.mbFormDrop();")
 	}
 	_this.setDrop()
+
+	//启用 setSize JavaScript 函数
+	_this.enableSetSizeJsFunc()
+
 	return _this
 }
 
@@ -208,4 +213,64 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 	`
 	js = fmt.Sprintf(js, _fnMax, _fnMin, _fnClose, _fnDrop)
 	frame.RunJs(js)
+}
+
+// SetSizeAndPosition 根据数字小键盘布局设置窗口大小和位置
+// position: 1-9 对应数字小键盘布局
+// 7 8 9    左上  上中  右上
+// 4 5 6    左中  中间  右中
+// 1 2 3    左下  下中  右下
+func (_this *MiniblinkForm) SetSizeAndPosition(width, height, position int) {
+	_this.SetSize(width, height)
+	screen := cs.App.GetScreen()
+	screenW := screen.WorkArea.Width
+	screenH := screen.WorkArea.Height
+	var x, y int
+
+	switch position {
+	case 1: // 左下角
+		x = 0
+		y = screenH - height
+	case 2: // 下中
+		x = (screenW - width) / 2
+		y = screenH - height
+	case 3: // 右下角
+		x = screenW - width
+		y = screenH - height
+	case 4: // 左中
+		x = 0
+		y = (screenH - height) / 2
+	case 5: // 中间
+		x = (screenW - width) / 2
+		y = (screenH - height) / 2
+	case 6: // 右中
+		x = screenW - width
+		y = (screenH - height) / 2
+	case 7: // 左上角
+		x = 0
+		y = 0
+	case 8: // 上中
+		x = (screenW - width) / 2
+		y = 0
+	case 9: // 右上角
+		x = screenW - width
+		y = 0
+	default: // 默认居中
+		x = (screenW - width) / 2
+		y = (screenH - height) / 2
+	}
+
+	_this.SetLocation(x, y)
+}
+
+// enableSetSizeJsFunc 内部方法，启用 setSize JavaScript 函数
+// 调用方式: setSize(width, height, position)
+// position: 1-9 对应数字小键盘布局
+func (_this *MiniblinkForm) enableSetSizeJsFunc() {
+	_this.View.JsFuncEx("setSize", func(width, height, position float64) {
+		w := int(width)
+		h := int(height)
+		pos := int(position)
+		_this.SetSizeAndPosition(w, h, pos)
+	})
 }
