@@ -1,12 +1,13 @@
 package windows
 
 import (
-	fm "github.com/reghtml/mblink/forms"
-	br "github.com/reghtml/mblink/forms/bridge"
-	win "github.com/reghtml/mblink/forms/windows/win32"
 	"sync"
 	"time"
 	"unsafe"
+
+	fm "github.com/reghtml/mblink/forms"
+	br "github.com/reghtml/mblink/forms/bridge"
+	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
 var dbclickTime = win.GetDoubleClickTime()
@@ -249,38 +250,15 @@ func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 				ret = 1
 			}
 		}
-	case win.WM_LBUTTONDBLCLK, win.WM_MBUTTONDBLCLK, win.WM_RBUTTONDBLCLK:
-		_this.clickTime = time.Now().Add(time.Hour * -1)
-		if _this.onMouseClick != nil {
-			e := fm.MouseEvArgs{
-				X:        int(win.GET_X_LPARAM(lParam)),
-				Y:        int(win.GET_Y_LPARAM(lParam)),
-				Time:     time.Now(),
-				IsDouble: true,
-			}
-			p := win.POINT{
-				X: int32(e.X),
-				Y: int32(e.Y),
-			}
-			win.ClientToScreen(hWnd, &p)
-			e.ScreenX = int(p.X)
-			e.ScreenY = int(p.Y)
-			switch msg {
-			case win.WM_LBUTTONDOWN:
-				e.Button |= fm.MouseButtons_Left
-			case win.WM_RBUTTONDOWN:
-				e.Button |= fm.MouseButtons_Right
-			case win.WM_MBUTTONDOWN:
-				e.Button |= fm.MouseButtons_Middle
-			}
-			if _this.onMouseClick(&e); e.IsHandle {
-				ret = 1
-			}
-		}
-	case win.WM_LBUTTONDOWN, win.WM_RBUTTONDOWN, win.WM_MBUTTONDOWN:
+	case win.WM_LBUTTONDOWN, win.WM_RBUTTONDOWN, win.WM_MBUTTONDOWN, win.WM_LBUTTONDBLCLK, win.WM_MBUTTONDBLCLK, win.WM_RBUTTONDBLCLK:
 		win.SetCapture(hWnd)
 		_this.lockCursor = true
-		_this.clickTime = time.Now()
+		isDblClick := msg == win.WM_LBUTTONDBLCLK || msg == win.WM_MBUTTONDBLCLK || msg == win.WM_RBUTTONDBLCLK
+		if isDblClick {
+			_this.clickTime = time.Now().Add(time.Hour * -1)
+		} else {
+			_this.clickTime = time.Now()
+		}
 		if _this.onMouseDown != nil {
 			e := fm.MouseEvArgs{
 				X:    int(win.GET_X_LPARAM(lParam)),
@@ -295,14 +273,41 @@ func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 			e.ScreenX = int(p.X)
 			e.ScreenY = int(p.Y)
 			switch msg {
-			case win.WM_LBUTTONDOWN:
+			case win.WM_LBUTTONDOWN, win.WM_LBUTTONDBLCLK:
 				e.Button |= fm.MouseButtons_Left
-			case win.WM_RBUTTONDOWN:
+			case win.WM_RBUTTONDOWN, win.WM_RBUTTONDBLCLK:
 				e.Button |= fm.MouseButtons_Right
-			case win.WM_MBUTTONDOWN:
+			case win.WM_MBUTTONDOWN, win.WM_MBUTTONDBLCLK:
 				e.Button |= fm.MouseButtons_Middle
 			}
 			if _this.onMouseDown(&e); e.IsHandle {
+				ret = 1
+			}
+		}
+		// 如果是双击，也触发 onMouseClick
+		if isDblClick && _this.onMouseClick != nil {
+			e := fm.MouseEvArgs{
+				X:        int(win.GET_X_LPARAM(lParam)),
+				Y:        int(win.GET_Y_LPARAM(lParam)),
+				Time:     time.Now(),
+				IsDouble: true,
+			}
+			p := win.POINT{
+				X: int32(e.X),
+				Y: int32(e.Y),
+			}
+			win.ClientToScreen(hWnd, &p)
+			e.ScreenX = int(p.X)
+			e.ScreenY = int(p.Y)
+			switch msg {
+			case win.WM_LBUTTONDBLCLK:
+				e.Button |= fm.MouseButtons_Left
+			case win.WM_RBUTTONDBLCLK:
+				e.Button |= fm.MouseButtons_Right
+			case win.WM_MBUTTONDBLCLK:
+				e.Button |= fm.MouseButtons_Middle
+			}
+			if _this.onMouseClick(&e); e.IsHandle {
 				ret = 1
 			}
 		}
@@ -322,11 +327,11 @@ func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 		e.ScreenX = int(p.X)
 		e.ScreenY = int(p.Y)
 		switch msg {
-		case win.WM_LBUTTONDOWN:
+		case win.WM_LBUTTONUP:
 			e.Button |= fm.MouseButtons_Left
-		case win.WM_RBUTTONDOWN:
+		case win.WM_RBUTTONUP:
 			e.Button |= fm.MouseButtons_Right
-		case win.WM_MBUTTONDOWN:
+		case win.WM_MBUTTONUP:
 			e.Button |= fm.MouseButtons_Middle
 		}
 		if _this.onMouseUp != nil {
@@ -353,11 +358,11 @@ func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 							IsDouble: false,
 						}
 						switch msg {
-						case win.WM_LBUTTONDOWN:
+						case win.WM_LBUTTONUP:
 							e.Button |= fm.MouseButtons_Left
-						case win.WM_RBUTTONDOWN:
+						case win.WM_RBUTTONUP:
 							e.Button |= fm.MouseButtons_Right
-						case win.WM_MBUTTONDOWN:
+						case win.WM_MBUTTONUP:
 							e.Button |= fm.MouseButtons_Middle
 						}
 						_this.InvokeEx(func(state interface{}) {

@@ -99,7 +99,7 @@ func (_this *Provider) SetIcon(file string) {
 
 func (_this *Provider) registerWndClass() {
 	_this.wndClass = win.WNDCLASSEX{
-		Style:         win.CS_HREDRAW | win.CS_VREDRAW | win.CS_DBLCLKS,
+		Style:         win.CS_HREDRAW | win.CS_VREDRAW,
 		LpfnWndProc:   syscall.NewCallbackCDecl(_this.classMsgProc),
 		HInstance:     _this.hInstance,
 		LpszClassName: sto16(_this.className),
