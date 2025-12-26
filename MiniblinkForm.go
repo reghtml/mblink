@@ -54,10 +54,8 @@ func (_this *MiniblinkForm) InitEx(param br.FormParam) *MiniblinkForm {
 		e.RunJs("window.setFormButton();window.mbFormDrop();")
 	}
 	_this.setDrop()
-
-	//启用 setSize JavaScript 函数
+	// 自动启用 setSize JavaScript 函数
 	_this.enableSetSizeJsFunc()
-
 	return _this
 }
 
@@ -65,33 +63,70 @@ func (_this *MiniblinkForm) setDrop() {
 	isDrop := false
 	var anchor fm.Point
 	var base fm.Point
+	var isDragging bool // 实际拖拽状态标志
+
 	_this.View.JsFuncEx(_fnDrop, func() {
+		// JavaScript 调用此函数表示鼠标在拖拽区域按下
+		// 设置 isDrop 标志，等待 EvMouseDown 事件来开始实际拖拽
 		isDrop = true
 	})
+
 	_this.View.EvMouseDown["__goMiniblink_drop"] = func(s cs.GUI, e *fm.MouseEvArgs) {
-		if isDrop {
+		if isDrop && e.Button&fm.MouseButtons_Left != 0 {
+			// 开始拖拽
+			isDragging = true
 			base = _this.GetBound().Point
 			anchor = fm.Point{
 				X: e.ScreenX,
 				Y: e.ScreenY,
 			}
-			_this.View.SetCursor(fm.CursorType_SIZEALL)
+			// 不改变鼠标样式，保持默认
 			_this.View.MouseEnable(false)
 		}
 	}
+
 	_this.View.EvMouseUp["__goMiniblink_drop"] = func(s cs.GUI, e *fm.MouseEvArgs) {
-		isDrop = false
-		_this.View.SetCursor(fm.CursorType_Default)
-		_this.View.MouseEnable(true)
+		if isDragging {
+			// 停止拖拽
+			isDragging = false
+			isDrop = false
+			// 不改变鼠标样式，保持默认
+			_this.View.MouseEnable(true)
+		}
 	}
+
 	_this.View.EvMouseMove["__goMiniblink_drop"] = func(s cs.GUI, e *fm.MouseEvArgs) {
-		if isDrop {
+		if isDragging {
+			// 使用 cs.App 的 MouseIsDown 来实时检查鼠标左键状态
+			mouseDown := cs.App.MouseIsDown()
+			if !mouseDown[fm.MouseButtons_Left] {
+				// 鼠标左键已经抬起，立即停止拖拽
+				isDragging = false
+				isDrop = false
+				// 不改变鼠标样式，保持默认
+				_this.View.MouseEnable(true)
+				return
+			}
+			// 继续拖拽
 			var nx = e.ScreenX - anchor.X
 			var ny = e.ScreenY - anchor.Y
 			nx = base.X + nx
 			ny = base.Y + ny
 			_this.SetLocation(nx, ny)
 			e.IsHandle = true
+		} else if isDrop {
+			// 如果 isDrop 为 true 但 isDragging 为 false，说明还没有开始拖拽
+			// 检查鼠标左键是否按下，如果按下则开始拖拽
+			if e.Button&fm.MouseButtons_Left != 0 {
+				isDragging = true
+				base = _this.GetBound().Point
+				anchor = fm.Point{
+					X: e.ScreenX,
+					Y: e.ScreenY,
+				}
+				// 不改变鼠标样式，保持默认
+				_this.View.MouseEnable(false)
+			}
 		}
 	}
 }
