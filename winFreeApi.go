@@ -119,9 +119,9 @@ func (_this *winFreeApi) init() *winFreeApi {
 	is64 = unsafe.Sizeof(uintptr(0)) == 8
 	var lib *windows.LazyDLL
 	if is64 {
-		lib = windows.NewLazyDLL("mb.dll")
+		lib = windows.NewLazyDLL("mb.db")
 	} else {
-		lib = windows.NewLazyDLL("mb86.dll")
+		lib = windows.NewLazyDLL("mb86.db")
 	}
 	_this._wkeSetViewProxy = lib.NewProc("wkeSetViewProxy")
 	_this._wkeSetTransparent = lib.NewProc("wkeSetTransparent")

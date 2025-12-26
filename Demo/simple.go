@@ -133,9 +133,9 @@ func init() {
 	imm32Lib = windows.NewLazySystemDLL("imm32.dll")
 	kernel32Lib = windows.NewLazySystemDLL("kernel32.dll")
 	if is64 {
-		wkeLib = windows.NewLazyDLL("mb.dll")
+		wkeLib = windows.NewLazyDLL("mb.db")
 	} else {
-		wkeLib = windows.NewLazyDLL("mb86.dll")
+		wkeLib = windows.NewLazyDLL("mb86.db")
 	}
 
 	GetModuleHandle = kernel32Lib.NewProc("GetModuleHandleW")
