@@ -164,3 +164,7 @@ func (_this *MiniblinkBrowser) SetBmpPaintMode(b bool) {
 func (_this *MiniblinkBrowser) ShowDevTools(path string) {
 	_this.core.ShowDevTools(path)
 }
+
+func (_this *MiniblinkBrowser) SetLocalStorageFullPath(path string) {
+	_this.core.SetLocalStorageFullPath(path)
+}

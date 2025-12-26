@@ -28,4 +28,5 @@ type Miniblink interface {
 	LoadUri(uri string)
 	GetHandle() wkeHandle
 	ShowDevTools(path string)
+	SetLocalStorageFullPath(path string)
 }

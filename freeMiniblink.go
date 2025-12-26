@@ -606,3 +606,7 @@ func (_this *freeMiniblink) GetHandle() wkeHandle {
 func (_this *freeMiniblink) ShowDevTools(path string) {
 	mbApi.wkeSetDebugConfig(_this.wke, "showDevTools", path)
 }
+
+func (_this *freeMiniblink) SetLocalStorageFullPath(path string) {
+	mbApi.wkeSetLocalStorageFullPath(_this.wke, path)
+}

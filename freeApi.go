@@ -170,4 +170,5 @@ type freeApi interface {
 	wkeSetViewProxy(wke wkeHandle, proxy ProxyInfo)
 	wkeGetViewDC(wke wkeHandle) uintptr
 	wkeSetDebugConfig(wke wkeHandle, debugString, param string)
+	wkeSetLocalStorageFullPath(wke wkeHandle, path string)
 }
