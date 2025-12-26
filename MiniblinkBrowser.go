@@ -113,6 +113,10 @@ func (_this *MiniblinkBrowser) LoadUri(uri string) {
 	_this.core.LoadUri(uri)
 }
 
+func (_this *MiniblinkBrowser) LoadHtmlWithBaseUrl(html, baseUrl string) {
+	_this.core.LoadHtmlWithBaseUrl(html, baseUrl)
+}
+
 func (_this *MiniblinkBrowser) JsFunc(name string, fn GoFn, state interface{}) {
 	_this.core.JsFunc(name, fn, state)
 }

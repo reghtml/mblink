@@ -42,6 +42,7 @@ type winFreeApi struct {
 	_wkeSetHandle                *windows.LazyProc
 	_wkeOnPaintBitUpdated        *windows.LazyProc
 	_wkeLoadURL                  *windows.LazyProc
+	_wkeLoadHtmlWithBaseUrl      *windows.LazyProc
 	_wkeResize                   *windows.LazyProc
 	_wkeNetOnResponse            *windows.LazyProc
 	_wkeOnLoadUrlBegin           *windows.LazyProc
@@ -189,6 +190,7 @@ func (_this *winFreeApi) init() *winFreeApi {
 	_this._wkeOnLoadUrlBegin = lib.NewProc("wkeOnLoadUrlBegin")
 	_this._wkeNetOnResponse = lib.NewProc("wkeNetOnResponse")
 	_this._wkeLoadURL = lib.NewProc("wkeLoadURL")
+	_this._wkeLoadHtmlWithBaseUrl = lib.NewProc("wkeLoadHtmlWithBaseUrl")
 	_this._wkeResize = lib.NewProc("wkeResize")
 	_this._wkeOnPaintBitUpdated = lib.NewProc("wkeOnPaintBitUpdated")
 	_this._wkeSetHandle = lib.NewProc("wkeSetHandle")
@@ -740,6 +742,12 @@ func (_this *winFreeApi) wkeResize(wke wkeHandle, w, h uint32) {
 func (_this *winFreeApi) wkeLoadURL(wke wkeHandle, url string) {
 	ptr := toCallStr(url)
 	_this._wkeLoadURL.Call(uintptr(wke), uintptr(unsafe.Pointer(&ptr[0])))
+}
+
+func (_this *winFreeApi) wkeLoadHtmlWithBaseUrl(wke wkeHandle, html, baseUrl string) {
+	htmlPtr := toCallStr(html)
+	baseUrlPtr := toCallStr(baseUrl)
+	_this._wkeLoadHtmlWithBaseUrl.Call(uintptr(wke), uintptr(unsafe.Pointer(&htmlPtr[0])), uintptr(unsafe.Pointer(&baseUrlPtr[0])))
 }
 
 func (_this *winFreeApi) wkeOnPaintBitUpdated(wke wkeHandle, callback wkePaintBitUpdatedCallback, param uintptr) {

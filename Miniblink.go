@@ -26,6 +26,7 @@ type Miniblink interface {
 	SetOnDocumentReady(callback DocumentReadyCallback)
 	SetOnPaintUpdated(callback PaintUpdatedCallback)
 	LoadUri(uri string)
+	LoadHtmlWithBaseUrl(html, baseUrl string)
 	GetHandle() wkeHandle
 	ShowDevTools(path string)
 	SetLocalStorageFullPath(path string)

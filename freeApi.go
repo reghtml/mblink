@@ -144,6 +144,7 @@ type freeApi interface {
 	wkeGetWidth(wke wkeHandle) uint32
 	wkeResize(wke wkeHandle, w, h uint32)
 	wkeLoadURL(wke wkeHandle, url string)
+	wkeLoadHtmlWithBaseUrl(wke wkeHandle, html, baseUrl string)
 	wkeOnPaintBitUpdated(wke wkeHandle, callback wkePaintBitUpdatedCallback, param uintptr)
 	wkeSetHandle(wke wkeHandle, handle uintptr)
 	jsEval(es jsExecState, js string) jsValue

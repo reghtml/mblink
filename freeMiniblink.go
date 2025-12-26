@@ -403,6 +403,10 @@ func (_this *freeMiniblink) LoadUri(uri string) {
 	mbApi.wkeLoadURL(_this.wke, uri)
 }
 
+func (_this *freeMiniblink) LoadHtmlWithBaseUrl(html, baseUrl string) {
+	mbApi.wkeLoadHtmlWithBaseUrl(_this.wke, html, baseUrl)
+}
+
 func (_this *freeMiniblink) viewSetCursor() bool {
 	cur := mbApi.wkeGetCursorInfoType(_this.wke)
 	newCur := fm.CursorType_Default
