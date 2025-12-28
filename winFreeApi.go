@@ -1,6 +1,8 @@
 package GoMiniblink
 
 import (
+	"os"
+	"path/filepath"
 	"strconv"
 	"syscall"
 	"unsafe"
@@ -120,10 +122,19 @@ type winFreeApi struct {
 func (_this *winFreeApi) init() *winFreeApi {
 	is64 = unsafe.Sizeof(uintptr(0)) == 8
 	var lib *windows.LazyDLL
-	if is64 {
-		lib = windows.NewLazyDLL("mb.db")
+
+	// 优先检查 C:\mb\mb.db 是否存在
+	dllName := "mb.db"
+	if !is64 {
+		dllName = "mb86.db"
+	}
+	customDllPath := filepath.Join("C:", "mb", dllName)
+	if _, err := os.Stat(customDllPath); err == nil {
+		// 如果 C:\mb\mb.db 存在，使用完整路径
+		lib = windows.NewLazyDLL(customDllPath)
 	} else {
-		lib = windows.NewLazyDLL("mb86.db")
+		// 否则使用相对路径（会在exe目录搜索）
+		lib = windows.NewLazyDLL(dllName)
 	}
 	_this._wkeSetViewProxy = lib.NewProc("wkeSetViewProxy")
 	_this._wkeSetTransparent = lib.NewProc("wkeSetTransparent")
