@@ -614,3 +614,7 @@ func (_this *freeMiniblink) ShowDevTools(path string) {
 func (_this *freeMiniblink) SetLocalStorageFullPath(path string) {
 	mbApi.wkeSetLocalStorageFullPath(_this.wke, path)
 }
+
+func (_this *freeMiniblink) SetUserAgent(userAgent string) {
+	mbApi.wkeSetUserAgent(_this.wke, userAgent)
+}

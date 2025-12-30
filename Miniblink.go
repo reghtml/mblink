@@ -30,4 +30,5 @@ type Miniblink interface {
 	GetHandle() wkeHandle
 	ShowDevTools(path string)
 	SetLocalStorageFullPath(path string)
+	SetUserAgent(userAgent string)
 }

@@ -172,3 +172,7 @@ func (_this *MiniblinkBrowser) ShowDevTools(path string) {
 func (_this *MiniblinkBrowser) SetLocalStorageFullPath(path string) {
 	_this.core.SetLocalStorageFullPath(path)
 }
+
+func (_this *MiniblinkBrowser) SetUserAgent(userAgent string) {
+	_this.core.SetUserAgent(userAgent)
+}
