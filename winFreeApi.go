@@ -117,6 +117,7 @@ type winFreeApi struct {
 	_wkeGetViewDC                *windows.LazyProc
 	_wkeSetDebugConfig           *windows.LazyProc
 	_wkeSetLocalStorageFullPath  *windows.LazyProc
+	_wkeSetUserAgent             *windows.LazyProc
 }
 
 func (_this *winFreeApi) init() *winFreeApi {
@@ -214,6 +215,7 @@ func (_this *winFreeApi) init() *winFreeApi {
 	_this._wkeGetViewDC = lib.NewProc("wkeGetViewDC")
 	_this._wkeSetDebugConfig = lib.NewProc("wkeSetDebugConfig")
 	_this._wkeSetLocalStorageFullPath = lib.NewProc("wkeSetLocalStorageFullPath")
+	_this._wkeSetUserAgent = lib.NewProc("wkeSetUserAgent")
 
 	_this._wkeInitialize.Call()
 	return _this
@@ -784,4 +786,9 @@ func (_this *winFreeApi) wkeSetLocalStorageFullPath(wke wkeHandle, path string) 
 	// 将字符串转换为 UTF-16 (WCHAR*) 指针
 	pathPtr, _ := syscall.UTF16PtrFromString(path)
 	_this._wkeSetLocalStorageFullPath.Call(uintptr(wke), uintptr(unsafe.Pointer(pathPtr)))
+}
+
+func (_this *winFreeApi) wkeSetUserAgent(wke wkeHandle, userAgent string) {
+	ptr := toCallStr(userAgent)
+	_this._wkeSetUserAgent.Call(uintptr(wke), uintptr(unsafe.Pointer(&ptr[0])))
 }

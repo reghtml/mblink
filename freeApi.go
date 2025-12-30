@@ -172,4 +172,5 @@ type freeApi interface {
 	wkeGetViewDC(wke wkeHandle) uintptr
 	wkeSetDebugConfig(wke wkeHandle, debugString, param string)
 	wkeSetLocalStorageFullPath(wke wkeHandle, path string)
+	wkeSetUserAgent(wke wkeHandle, userAgent string)
 }
