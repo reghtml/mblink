@@ -138,6 +138,10 @@ func (_this *Form) SetIcon(file string) {
 	_this.impl.SetIcon(file)
 }
 
+func (_this *Form) SetIconData(iconData []byte) {
+	_this.impl.SetIconData(iconData)
+}
+
 func (_this *Form) ShowDialog() {
 	_this.SetStartPosition(fm.FormStart_Screen_Center)
 	_this.impl.ShowDialog()

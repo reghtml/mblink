@@ -25,6 +25,7 @@ type Form interface {
 	SetMaximizeBox(isShow bool)
 	SetMinimizeBox(isShow bool)
 	SetIcon(iconFile string)
+	SetIconData(iconData []byte)
 	SetTopMost(isTop bool)
 
 	SetOnState(proc FormStateProc) FormStateProc

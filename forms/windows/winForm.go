@@ -1,10 +1,11 @@
 package windows
 
 import (
+	"unsafe"
+
 	fm "github.com/reghtml/mblink/forms"
 	br "github.com/reghtml/mblink/forms/bridge"
 	win "github.com/reghtml/mblink/forms/windows/win32"
-	"unsafe"
 )
 
 type winForm struct {
@@ -293,6 +294,21 @@ func (_this *winForm) SetIcon(iconFile string) {
 	if h != 0 {
 		win.SendMessage(_this.handle, win.WM_SETICON, 1, uintptr(h))
 		win.SendMessage(_this.handle, win.WM_SETICON, 0, uintptr(h))
+	}
+}
+
+func (_this *winForm) SetIconData(iconData []byte) {
+	style := win.GetWindowLong(_this.handle, win.GWL_EXSTYLE)
+	if style&win.WS_EX_DLGMODALFRAME != 0 {
+		return
+	}
+	if len(iconData) == 0 {
+		return
+	}
+	hIcon := _this.app.createIconFromData(iconData)
+	if hIcon != 0 {
+		win.SendMessage(_this.handle, win.WM_SETICON, 1, hIcon)
+		win.SendMessage(_this.handle, win.WM_SETICON, 0, hIcon)
 	}
 }
 

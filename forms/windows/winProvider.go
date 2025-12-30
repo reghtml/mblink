@@ -1,15 +1,16 @@
 package windows
 
 import (
-	fm "github.com/reghtml/mblink/forms"
-	br "github.com/reghtml/mblink/forms/bridge"
-	win "github.com/reghtml/mblink/forms/windows/win32"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"syscall"
 	"unsafe"
+
+	fm "github.com/reghtml/mblink/forms"
+	br "github.com/reghtml/mblink/forms/bridge"
+	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
 type windowsMsgProc func(hWnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr
@@ -95,6 +96,66 @@ func (_this *Provider) GetScreen() fm.Screen {
 func (_this *Provider) SetIcon(file string) {
 	h := win.LoadImage(_this.hInstance, sto16(file), win.IMAGE_ICON, 0, 0, win.LR_LOADFROMFILE)
 	_this.defIcon = win.HICON(h)
+}
+
+func (_this *Provider) SetIconData(iconData []byte) {
+	if len(iconData) == 0 {
+		return
+	}
+	hIcon := _this.createIconFromData(iconData)
+	if hIcon != 0 {
+		_this.defIcon = win.HICON(hIcon)
+	}
+}
+
+func (_this *Provider) createIconFromData(iconData []byte) uintptr {
+	if len(iconData) < 22 {
+		return 0
+	}
+
+	// ICO文件格式：ICONDIR (6字节) + ICONDIRENTRY (16字节) + 图标数据
+	iconCount := int(iconData[4]) | (int(iconData[5]) << 8)
+	if iconCount == 0 || iconCount > 100 {
+		return 0
+	}
+
+	firstEntryOffset := 6
+	if len(iconData) < firstEntryOffset+16 {
+		return 0
+	}
+
+	// 读取第一个图标的偏移量和大小
+	iconOffset := int(iconData[firstEntryOffset+12]) |
+		(int(iconData[firstEntryOffset+13]) << 8) |
+		(int(iconData[firstEntryOffset+14]) << 16) |
+		(int(iconData[firstEntryOffset+15]) << 24)
+
+	iconSize := int(iconData[firstEntryOffset+8]) |
+		(int(iconData[firstEntryOffset+9]) << 8) |
+		(int(iconData[firstEntryOffset+10]) << 16) |
+		(int(iconData[firstEntryOffset+11]) << 24)
+
+	if iconOffset >= len(iconData) || iconOffset+iconSize > len(iconData) {
+		return 0
+	}
+
+	iconResData := iconData[iconOffset : iconOffset+iconSize]
+
+	// 使用CreateIconFromResourceEx从内存创建图标
+	user32 := syscall.NewLazyDLL("user32.dll")
+	createIconFromResourceEx := user32.NewProc("CreateIconFromResourceEx")
+
+	ret, _, _ := createIconFromResourceEx.Call(
+		uintptr(unsafe.Pointer(&iconResData[0])),
+		uintptr(len(iconResData)),
+		1,          // TRUE - 图标
+		0x00030000, // 版本号
+		0,          // 默认宽度
+		0,          // 默认高度
+		0,          // 默认标志
+	)
+
+	return ret
 }
 
 func (_this *Provider) registerWndClass() {

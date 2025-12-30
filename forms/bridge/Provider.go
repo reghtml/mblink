@@ -13,6 +13,7 @@ type Provider interface {
 	RunMain(form Form)
 	Exit(code int)
 	SetIcon(file string)
+	SetIconData(iconData []byte)
 	GetScreen() f.Screen
 	ModifierKeys() map[f.Keys]bool
 	MouseIsDown() map[f.MouseButtons]bool
