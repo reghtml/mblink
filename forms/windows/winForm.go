@@ -10,11 +10,14 @@ import (
 
 type winForm struct {
 	winContainer
-	_onClose  func() (cancel bool)
-	_onState  br.FormStateProc
-	_onActive br.FormActiveProc
-	border    fm.FormBorder
-	_isModal  bool
+	_onClose           func() (cancel bool)
+	_onState           br.FormStateProc
+	_onActive          br.FormActiveProc
+	border             fm.FormBorder
+	_isModal           bool
+	restoreRect        win.RECT // 保存恢复时使用的窗口位置和大小（用于无边框窗口）
+	hasRestoreRect     bool     // 是否有保存的恢复位置和大小
+	_isCustomMaximized bool     // 是否处于自定义最大化状态（用于无边框窗口）
 }
 
 func (_this *winForm) init(provider *Provider, param br.FormParam) *winForm {
@@ -52,6 +55,27 @@ func (_this *winForm) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 		if _this._isModal {
 			win.PostQuitMessage(0)
 			return 1
+		}
+	case win.WM_GETMINMAXINFO:
+		// 对于无边框窗口，设置最大化尺寸为工作区域（不覆盖任务栏）
+		if _this.border == fm.FormBorder_None {
+			mmi := (*win.MINMAXINFO)(unsafe.Pointer(lParam))
+			hMonitor := win.MonitorFromWindow(hWnd, win.MONITOR_DEFAULTTONEAREST)
+			if hMonitor != 0 {
+				var mi win.MONITORINFO
+				mi.CbSize = uint32(unsafe.Sizeof(mi))
+				if win.GetMonitorInfo(hMonitor, &mi) {
+					rcWork := mi.RcWork
+					rcMonitor := mi.RcMonitor
+					// 计算工作区域相对于监视器的位置
+					mmi.PtMaxPosition.X = rcWork.Left - rcMonitor.Left
+					mmi.PtMaxPosition.Y = rcWork.Top - rcMonitor.Top
+					// 设置最大尺寸为工作区域大小
+					mmi.PtMaxSize.X = rcWork.Right - rcWork.Left
+					mmi.PtMaxSize.Y = rcWork.Bottom - rcWork.Top
+					return 0
+				}
+			}
 		}
 	case win.WM_SIZE:
 		if _this._onState != nil {
@@ -195,6 +219,24 @@ func (_this *winForm) NoneBorderResize() {
 }
 
 func (_this *winForm) Show() {
+	// 如果是无边框窗口且已经最大化，使用保存的位置恢复
+	if _this.border == fm.FormBorder_None && _this._isCustomMaximized && _this.hasRestoreRect {
+		restoreWidth := _this.restoreRect.Right - _this.restoreRect.Left
+		restoreHeight := _this.restoreRect.Bottom - _this.restoreRect.Top
+		win.SetWindowPos(
+			_this.handle,
+			0,
+			_this.restoreRect.Left,
+			_this.restoreRect.Top,
+			restoreWidth,
+			restoreHeight,
+			win.SWP_NOZORDER|win.SWP_NOACTIVATE|win.SWP_FRAMECHANGED,
+		)
+		win.UpdateWindow(_this.handle)
+		_this._isCustomMaximized = false
+		return
+	}
+
 	isMax := win.IsZoomed(_this.handle)
 	isMin := win.IsIconic(_this.handle)
 	if isMax || isMin {
@@ -229,7 +271,85 @@ func (_this *winForm) ShowDialog() {
 	}
 }
 
+// getWorkArea 获取当前窗口所在监视器的工作区域（确保不覆盖任务栏）
+func (_this *winForm) getWorkArea() win.RECT {
+	var workRect win.RECT
+
+	// 获取屏幕总尺寸，用于验证
+	screenWidth := int32(win.GetSystemMetrics(win.SM_CXSCREEN))
+	screenHeight := int32(win.GetSystemMetrics(win.SM_CYSCREEN))
+
+	// 优先使用 GetMonitorInfo 获取当前窗口所在监视器的工作区域（支持多显示器，最准确）
+	hMonitor := win.MonitorFromWindow(_this.handle, win.MONITOR_DEFAULTTONEAREST)
+	if hMonitor != 0 {
+		var mi win.MONITORINFO
+		mi.CbSize = uint32(unsafe.Sizeof(mi))
+		if win.GetMonitorInfo(hMonitor, &mi) {
+			workRect = mi.RcWork
+			workWidth := workRect.Right - workRect.Left
+			workHeight := workRect.Bottom - workRect.Top
+			monitorWidth := mi.RcMonitor.Right - mi.RcMonitor.Left
+			monitorHeight := mi.RcMonitor.Bottom - mi.RcMonitor.Top
+			// 验证：工作区域必须小于监视器区域（确保排除了任务栏）
+			// 并且工作区域的坐标应该在监视器范围内
+			if workWidth > 0 && workHeight > 0 &&
+				(workWidth < monitorWidth || workHeight < monitorHeight) &&
+				workRect.Left >= mi.RcMonitor.Left && workRect.Top >= mi.RcMonitor.Top &&
+				workRect.Right <= mi.RcMonitor.Right && workRect.Bottom <= mi.RcMonitor.Bottom {
+				return workRect
+			}
+		}
+	}
+
+	// 如果 GetMonitorInfo 失败或结果不合理，使用 SystemParametersInfo（只适用于主显示器）
+	var testRect win.RECT
+	if win.SystemParametersInfo(win.SPI_GETWORKAREA, 0, unsafe.Pointer(&testRect), 0) {
+		testWidth := testRect.Right - testRect.Left
+		testHeight := testRect.Bottom - testRect.Top
+		// 验证：工作区域必须小于屏幕尺寸（确保排除了任务栏）
+		// 并且坐标应该在屏幕范围内（通常从0,0或很小的正数开始）
+		if testWidth > 0 && testHeight > 0 &&
+			(testWidth < screenWidth || testHeight < screenHeight) &&
+			testRect.Left >= 0 && testRect.Top >= 0 &&
+			testRect.Right <= screenWidth && testRect.Bottom <= screenHeight {
+			return testRect
+		}
+	}
+
+	// 最后的后备方案：使用系统指标，如果等于屏幕尺寸则减去任务栏空间
+	fullScreenWidth := win.GetSystemMetrics(win.SM_CXFULLSCREEN)
+	fullScreenHeight := win.GetSystemMetrics(win.SM_CYFULLSCREEN)
+
+	// 如果系统指标等于屏幕尺寸，说明没有排除任务栏，需要手动减去
+	// 通常任务栏在底部，高度约为40-48像素；如果在侧边，宽度约为40-48像素
+	taskbarSize := int32(48) // 保守的任务栏尺寸
+	if fullScreenWidth == screenWidth {
+		// 任务栏可能在右侧或左侧，减小宽度
+		fullScreenWidth = screenWidth - taskbarSize
+	}
+	if fullScreenHeight == screenHeight {
+		// 任务栏可能在底部或顶部，减小高度
+		fullScreenHeight = screenHeight - taskbarSize
+	}
+	// 确保值有效
+	if fullScreenWidth <= 0 {
+		fullScreenWidth = screenWidth - taskbarSize
+	}
+	if fullScreenHeight <= 0 {
+		fullScreenHeight = screenHeight - taskbarSize
+	}
+
+	return win.RECT{
+		Left:   0,
+		Top:    0,
+		Right:  fullScreenWidth,
+		Bottom: fullScreenHeight,
+	}
+}
+
 func (_this *winForm) ShowToMax() {
+	// 现在通过 WM_GETMINMAXINFO 处理无边框窗口的最大化（自动使用工作区域）
+	// 直接使用标准的 ShowWindow，系统会自动使用我们在 WM_GETMINMAXINFO 中设置的值
 	win.ShowWindow(_this.handle, win.SW_MAXIMIZE)
 	win.UpdateWindow(_this.handle)
 }
