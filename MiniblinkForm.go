@@ -194,6 +194,7 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 			var fnClose=window[%q];
 			var fnDrop=window[%q];
 			var mbFormClickHandler=null;
+			var mbFormDblClickHandler=null;
 			window.mbFormDrop=function(){
 				document.getElementsByTagName("body")[0].addEventListener("mousedown",
 					function (e) {
@@ -247,6 +248,20 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 						}
 					};
 					document.addEventListener("click", mbFormClickHandler, true);
+				}
+				// 处理双击 .mbform-dbmax 元素，执行与单击 .mbform-max 相同的功能
+				if(document.addEventListener && !mbFormDblClickHandler){
+					mbFormDblClickHandler = function(e){
+						var target = e.target || e.srcElement;
+						if(!target.classList) return;
+						if(target.classList.contains("mbform-dbmax")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMax) fnMax();
+							return false;
+						}
+					};
+					document.addEventListener("dblclick", mbFormDblClickHandler, true);
 				}
 			};
 	`
