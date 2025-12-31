@@ -193,6 +193,7 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 			var fnMin=window[%q];
 			var fnClose=window[%q];
 			var fnDrop=window[%q];
+			var mbFormClickHandler=null;
 			window.mbFormDrop=function(){
 				document.getElementsByTagName("body")[0].addEventListener("mousedown",
 					function (e) {
@@ -214,36 +215,39 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 					});
 			};
 			window.mbFormMax=function(obj){
-				if(fnMax){
-					var els = obj.getElementsByClassName("mbform-max");
-					for (var i = 0; i < els.length; i++) {
-						els[i].removeEventListener("click");
-						els[i].addEventListener("click", function(){fnMax()});
-					}
-				}
+				// 兼容旧代码，实际事件委托在 setFormButton 中统一处理
 			};
 			window.mbFormMin=function(obj){
-				if(fnMin){
-					var els = obj.getElementsByClassName("mbform-min");
-					for (var i = 0; i < els.length; i++) {
-						els[i].removeEventListener("click");
-						els[i].addEventListener("click", function(){fnMin()});
-					}
-				}
+				// 兼容旧代码，实际事件委托在 setFormButton 中统一处理
 			};
 			window.mbFormClose=function(obj){
-				if(fnClose){
-					var els = obj.getElementsByClassName("mbform-close");
-					for (var i = 0; i < els.length; i++) {
-						els[i].removeEventListener("click");
-						els[i].addEventListener("click", function(){fnClose()});
-					}
-				}
+				// 兼容旧代码，实际事件委托在 setFormButton 中统一处理
 			};
 			window.setFormButton=function(){
-				window.mbFormMax(document);
-				window.mbFormMin(document);
-				window.mbFormClose(document);
+				// 使用事件委托处理所有按钮点击，避免 DOM 更新后事件丢失的问题
+				if(document.addEventListener && !mbFormClickHandler){
+					mbFormClickHandler = function(e){
+						var target = e.target || e.srcElement;
+						if(!target.classList) return;
+						if(target.classList.contains("mbform-max")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMax) fnMax();
+							return false;
+						}else if(target.classList.contains("mbform-min")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMin) fnMin();
+							return false;
+						}else if(target.classList.contains("mbform-close")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnClose) fnClose();
+							return false;
+						}
+					};
+					document.addEventListener("click", mbFormClickHandler, true);
+				}
 			};
 	`
 	js = fmt.Sprintf(js, _fnMax, _fnMin, _fnClose, _fnDrop)
