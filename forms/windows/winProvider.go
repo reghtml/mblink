@@ -26,6 +26,8 @@ type Provider struct {
 	defIcon    win.HICON
 	watchAll   map[win.HWND][]windowsMsgProc
 	forms      map[win.HWND]br.Form
+	minWidth   int32 // 最小宽度
+	minHeight  int32 // 最小高度
 }
 
 func (_this *Provider) Init() *Provider {
@@ -33,7 +35,7 @@ func (_this *Provider) Init() *Provider {
 	_this.watchAll = make(map[win.HWND][]windowsMsgProc)
 	_this.tmpWnd = make(map[uintptr]baseWindow)
 	_this.handleWnds = make(map[win.HWND]baseWindow)
-	_this.className = "QQ2564874169/GoMiniblinkClass"
+	_this.className = "YAN4/TOOLS"
 	_this.hInstance = win.GetModuleHandle(nil)
 	_this.registerWndClass()
 	return _this
@@ -98,6 +100,7 @@ func (_this *Provider) SetIcon(file string) {
 	_this.defIcon = win.HICON(h)
 }
 
+// 设置图标数据
 func (_this *Provider) SetIconData(iconData []byte) {
 	if len(iconData) == 0 {
 		return
@@ -106,6 +109,12 @@ func (_this *Provider) SetIconData(iconData []byte) {
 	if hIcon != 0 {
 		_this.defIcon = win.HICON(hIcon)
 	}
+}
+
+// SetMinSize 设置全局窗口最小尺寸
+func (_this *Provider) SetMinSize(width, height int) {
+	_this.minWidth = int32(width)
+	_this.minHeight = int32(height)
 }
 
 func (_this *Provider) createIconFromData(iconData []byte) uintptr {
@@ -208,6 +217,18 @@ func (_this *Provider) classMsgProc(hWnd win.HWND, msg uint32, wParam uintptr, l
 		}
 	}
 	switch msg {
+	case win.WM_GETMINMAXINFO:
+		mmi := (*win.MINMAXINFO)(unsafe.Pointer(lParam))
+
+		// 使用 SetMinSize 设置的全局最小尺寸
+		if _this.minWidth > 0 {
+			mmi.PtMinTrackSize.X = _this.minWidth
+		}
+		if _this.minHeight > 0 {
+			mmi.PtMinTrackSize.Y = _this.minHeight
+		}
+
+		return 0
 	case win.WM_DESTROY:
 		delete(_this.handleWnds, hWnd)
 		delete(_this.forms, hWnd)

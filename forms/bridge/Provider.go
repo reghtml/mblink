@@ -14,6 +14,7 @@ type Provider interface {
 	Exit(code int)
 	SetIcon(file string)
 	SetIconData(iconData []byte)
+	SetMinSize(width, height int) // ✅ 设置最小尺寸
 	GetScreen() f.Screen
 	ModifierKeys() map[f.Keys]bool
 	MouseIsDown() map[f.MouseButtons]bool
