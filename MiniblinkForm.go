@@ -230,42 +230,67 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 			};
 			window.setFormButton=function(){
 				// 使用事件委托处理所有按钮点击，避免 DOM 更新后事件丢失的问题
-				if(document.addEventListener && !mbFormClickHandler){
+				// 每次调用时重新绑定，确保事件监听器始终有效
+				if(document.addEventListener){
+					// 移除旧的监听器（如果存在）
+					if(mbFormClickHandler){
+						document.removeEventListener("click", mbFormClickHandler, true);
+					}
 					mbFormClickHandler = function(e){
 						var target = e.target || e.srcElement;
 						if(!target.classList) return;
-						if(target.classList.contains("mbform-max")){
-							e.preventDefault();
-							e.stopPropagation();
-							if(fnMax) fnMax();
-							return false;
-						}else if(target.classList.contains("mbform-min")){
-							e.preventDefault();
-							e.stopPropagation();
-							if(fnMin) fnMin();
-							return false;
-						}else if(target.classList.contains("mbform-close")){
-							e.preventDefault();
-							e.stopPropagation();
-							if(fnClose) fnClose();
-							return false;
+						// 检查目标元素或其父元素是否包含按钮类名
+						while(target && target !== document){
+							if(target.classList){
+								if(target.classList.contains("mbform-max")){
+									e.preventDefault();
+									e.stopPropagation();
+									if(fnMax) fnMax();
+									return false;
+								}else if(target.classList.contains("mbform-min")){
+									e.preventDefault();
+									e.stopPropagation();
+									if(fnMin) fnMin();
+									return false;
+								}else if(target.classList.contains("mbform-close")){
+									e.preventDefault();
+									e.stopPropagation();
+									if(fnClose) fnClose();
+									return false;
+								}
+							}
+							target = target.parentElement;
 						}
 					};
 					document.addEventListener("click", mbFormClickHandler, true);
 				}
 				// 处理双击 .mbform-dbmax 元素，执行与单击 .mbform-max 相同的功能
-				if(document.addEventListener && !mbFormDblClickHandler){
+				if(document.addEventListener){
+					// 移除旧的监听器（如果存在）
+					if(mbFormDblClickHandler){
+						document.removeEventListener("dblclick", mbFormDblClickHandler, true);
+					}
 					mbFormDblClickHandler = function(e){
 						var target = e.target || e.srcElement;
 						if(!target.classList) return;
-						if(target.classList.contains("mbform-dbmax")){
-							e.preventDefault();
-							e.stopPropagation();
-							if(fnMax) fnMax();
-							return false;
+						// 检查目标元素或其父元素是否包含 mbform-dbmax 类名
+						while(target && target !== document){
+							if(target.classList && target.classList.contains("mbform-dbmax")){
+								e.preventDefault();
+								e.stopPropagation();
+								if(fnMax) fnMax();
+								return false;
+							}
+							target = target.parentElement;
 						}
 					};
 					document.addEventListener("dblclick", mbFormDblClickHandler, true);
+				}
+				// 定期重新绑定，防止长时间不操作后失效（每3分钟重新绑定一次）
+				if(!window.mbFormButtonTimer){
+					window.mbFormButtonTimer = setInterval(function(){
+						window.setFormButton();
+					}, 3 * 60 * 1000);
 				}
 			};
 	`
