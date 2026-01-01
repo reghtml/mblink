@@ -54,9 +54,10 @@ const (
 	FormStart_Screen_Center
 )
 
+// MouseButtons 鼠标按键类型
 type MouseButtons int
 
-//鼠标按键
+// 鼠标按键常量
 const (
 	MouseButtons_None   MouseButtons = 0
 	MouseButtons_Left   MouseButtons = 1
@@ -75,8 +76,10 @@ const (
 	AnchorStyle_Fill   AnchorStyle = 16
 )
 
+// MsgBoxIcon 消息框图标类型
 type MsgBoxIcon int
 
+// 消息框图标常量
 const (
 	MsgBoxIcon_Error    MsgBoxIcon = 1
 	MsgBoxIcon_Warn     MsgBoxIcon = 2
@@ -84,8 +87,10 @@ const (
 	MsgBoxIcon_Question MsgBoxIcon = 8
 )
 
+// MsgBoxButton 消息框按钮类型
 type MsgBoxButton int
 
+// 消息框按钮常量
 const (
 	MsgBoxButton_Ok               MsgBoxButton = 1
 	MsgBoxButton_OkCancel         MsgBoxButton = 2
@@ -95,8 +100,10 @@ const (
 	MsgBoxButton_RetryCancel      MsgBoxButton = 32
 )
 
+// MsgBoxResult 消息框结果类型
 type MsgBoxResult int32
 
+// 消息框结果常量
 const (
 	MsgBoxResult_Ok     MsgBoxResult = 1
 	MsgBoxResult_Cancel MsgBoxResult = 2

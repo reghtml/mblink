@@ -1,9 +1,9 @@
 package forms
 
-//键盘按键
+// Keys 键盘按键类型
 type Keys int
 
-//键盘按键
+// 键盘按键常量
 const (
 	Keys_Error Keys = iota
 	Keys_Esc

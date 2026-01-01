@@ -13,8 +13,10 @@ import (
 	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
+// windowsMsgProc Windows 消息处理函数类型
 type windowsMsgProc func(hWnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr
 
+// Provider Windows 平台提供者实现
 type Provider struct {
 	hInstance  win.HINSTANCE
 	className  string
@@ -30,6 +32,7 @@ type Provider struct {
 	minHeight  int32 // 最小高度
 }
 
+// 初始化提供者
 func (_this *Provider) Init() *Provider {
 	_this.forms = make(map[win.HWND]br.Form)
 	_this.watchAll = make(map[win.HWND][]windowsMsgProc)
@@ -41,10 +44,12 @@ func (_this *Provider) Init() *Provider {
 	return _this
 }
 
+// 监视窗口消息
 func (_this *Provider) watch(wnd baseWindow, proc windowsMsgProc) {
 	_this.watchAll[wnd.hWnd()] = append(_this.watchAll[wnd.hWnd()], proc)
 }
 
+// 获取鼠标位置
 func (_this *Provider) MouseLocation() fm.Point {
 	pos := win.POINT{}
 	win.GetCursorPos(&pos)
@@ -54,11 +59,13 @@ func (_this *Provider) MouseLocation() fm.Point {
 	}
 }
 
+// 获取应用程序目录
 func (_this *Provider) AppDir() string {
 	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 	return dir
 }
 
+// 获取修饰键状态
 func (_this *Provider) ModifierKeys() map[fm.Keys]bool {
 	keys := make(map[fm.Keys]bool)
 	cs := win.GetKeyState(int32(win.VK_CONTROL))
@@ -70,6 +77,7 @@ func (_this *Provider) ModifierKeys() map[fm.Keys]bool {
 	return keys
 }
 
+// 获取鼠标按键按下状态
 func (_this *Provider) MouseIsDown() map[fm.MouseButtons]bool {
 	keys := make(map[fm.MouseButtons]bool)
 	ls := win.GetKeyState(int32(win.VK_LBUTTON))
@@ -81,6 +89,7 @@ func (_this *Provider) MouseIsDown() map[fm.MouseButtons]bool {
 	return keys
 }
 
+// 获取屏幕信息
 func (_this *Provider) GetScreen() fm.Screen {
 	var s = fm.Screen{
 		Full: fm.Rect{
@@ -95,6 +104,7 @@ func (_this *Provider) GetScreen() fm.Screen {
 	return s
 }
 
+// 设置应用程序图标
 func (_this *Provider) SetIcon(file string) {
 	h := win.LoadImage(_this.hInstance, sto16(file), win.IMAGE_ICON, 0, 0, win.LR_LOADFROMFILE)
 	_this.defIcon = win.HICON(h)
@@ -117,6 +127,7 @@ func (_this *Provider) SetMinSize(width, height int) {
 	_this.minHeight = int32(height)
 }
 
+// 从图标数据创建图标句柄
 func (_this *Provider) createIconFromData(iconData []byte) uintptr {
 	if len(iconData) < 22 {
 		return 0
@@ -167,6 +178,7 @@ func (_this *Provider) createIconFromData(iconData []byte) uintptr {
 	return ret
 }
 
+// 注册窗口类
 func (_this *Provider) registerWndClass() {
 	_this.wndClass = win.WNDCLASSEX{
 		Style:         win.CS_HREDRAW | win.CS_VREDRAW,
@@ -184,11 +196,13 @@ func (_this *Provider) registerWndClass() {
 		0, 0, _this.hInstance, unsafe.Pointer(nil))
 }
 
+// 添加窗口到临时映射表
 func (_this *Provider) add(wnd baseWindow) {
 	ref := reflect.ValueOf(wnd).Pointer()
 	_this.tmpWnd[ref] = wnd
 }
 
+// 窗口类消息处理过程
 func (_this *Provider) classMsgProc(hWnd win.HWND, msg uint32, wParam uintptr, lParam uintptr) uintptr {
 	runtime.LockOSThread()
 	switch msg {
@@ -242,10 +256,12 @@ func (_this *Provider) classMsgProc(hWnd win.HWND, msg uint32, wParam uintptr, l
 	return rs
 }
 
+// 退出应用程序
 func (_this *Provider) Exit(code int) {
 	win.PostQuitMessage(int32(code))
 }
 
+// 运行主窗体消息循环
 func (_this *Provider) RunMain(form br.Form) {
 	runtime.LockOSThread()
 	form.Show()

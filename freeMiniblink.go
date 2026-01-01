@@ -23,6 +23,7 @@ func init() {
 	})
 }
 
+// 执行 Go 函数（从 JavaScript 调用）
 func execGoFunc(ctx GoFnContext) interface{} {
 	wkeName := ctx.Param[0].(string)
 	fnName := ctx.Param[1].(string)
@@ -41,6 +42,7 @@ func execGoFunc(ctx GoFnContext) interface{} {
 	return nil
 }
 
+// freeMiniblink Miniblink 接口的底层实现
 type freeMiniblink struct {
 	view        *cs.Control
 	wke         wkeHandle
@@ -58,6 +60,7 @@ type freeMiniblink struct {
 	paintUpdated  PaintUpdatedCallback
 }
 
+// 初始化 freeMiniblink 实例
 func (_this *freeMiniblink) init(control *cs.Control) *freeMiniblink {
 	_this.view = control
 	_this.fnMap = make(map[string]JsFnBinding)
@@ -67,18 +70,22 @@ func (_this *freeMiniblink) init(control *cs.Control) *freeMiniblink {
 	return _this
 }
 
+// 设置代理服务器
 func (_this *freeMiniblink) SetProxy(info ProxyInfo) {
 	mbApi.wkeSetViewProxy(_this.wke, info)
 }
 
+// 检查鼠标事件是否启用
 func (_this *freeMiniblink) MouseIsEnable() bool {
 	return _this.isLockMouse == false
 }
 
+// 启用或禁用鼠标事件
 func (_this *freeMiniblink) MouseEnable(b bool) {
 	_this.isLockMouse = b == false
 }
 
+// 调用 JavaScript 函数并返回结果
 func (_this *freeMiniblink) CallJsFunc(name string, param []interface{}) interface{} {
 	es := mbApi.wkeGlobalExec(_this.wke)
 	var ps []jsValue
@@ -91,6 +98,7 @@ func (_this *freeMiniblink) CallJsFunc(name string, param []interface{}) interfa
 	return toGoValue(_this, es, rs)
 }
 
+// 绑定 Go 函数为 JavaScript 全局函数
 func (_this *freeMiniblink) JsFunc(name string, fn GoFn, state interface{}) {
 	_this.fnMap[name] = JsFnBinding{
 		Name:  name,
@@ -104,6 +112,7 @@ func (_this *freeMiniblink) JsFunc(name string, fn GoFn, state interface{}) {
 	}
 }
 
+// 生成 JavaScript 绑定脚本
 func (_this *freeMiniblink) getJsBindingScript(isMain bool) string {
 	rsName := "rs" + strconv.FormatUint(uint64(_this.wke), 32)
 	call := fnCall
@@ -125,32 +134,39 @@ func (_this *freeMiniblink) getJsBindingScript(isMain bool) string {
 	return strings.Join(list, ";")
 }
 
+// 执行 JavaScript 代码并返回结果
 func (_this *freeMiniblink) RunJs(script string) interface{} {
 	es := mbApi.wkeGlobalExec(_this.wke)
 	rs := mbApi.jsEval(es, script)
 	return toGoValue(_this, es, rs)
 }
 
+// 设置文档加载完成时的回调函数
 func (_this *freeMiniblink) SetOnDocumentReady(callback DocumentReadyCallback) {
 	_this.documentReady = callback
 }
 
+// 设置控制台消息输出的回调函数
 func (_this *freeMiniblink) SetOnConsole(callback ConsoleCallback) {
 	_this.onConsole = callback
 }
 
+// 设置 JavaScript 环境准备就绪时的回调函数
 func (_this *freeMiniblink) SetOnJsReady(callback JsReadyCallback) {
 	_this.onJsReady = callback
 }
 
+// 设置网络请求发起前的回调函数
 func (_this *freeMiniblink) SetOnRequestBefore(callback RequestBeforeCallback) {
 	_this.onRequest = callback
 }
 
+// 设置绘制更新时的回调函数
 func (_this *freeMiniblink) SetOnPaintUpdated(callback PaintUpdatedCallback) {
 	_this.paintUpdated = callback
 }
 
+// 初始化 miniblink 并设置所有回调
 func (_this *freeMiniblink) mbInit() {
 	_this.wke = createWebView(_this)
 	_this.viewResize(_this.view.GetBound().Rect)
@@ -164,6 +180,7 @@ func (_this *freeMiniblink) mbInit() {
 	mbApi.wkeOnDocumentReady(_this.wke, _this.onDocumentReady, 0)
 }
 
+// 文档加载完成回调处理
 func (_this *freeMiniblink) onDocumentReady(_ wkeHandle, _ uintptr, frame wkeFrame) uintptr {
 	args := new(freeDocumentReadyEvArgs).init(_this, frame)
 	if _this.documentReady != nil {
@@ -172,6 +189,7 @@ func (_this *freeMiniblink) onDocumentReady(_ wkeHandle, _ uintptr, frame wkeFra
 	return 0
 }
 
+// 控制台消息回调处理
 func (_this *freeMiniblink) jsConsole(_ wkeHandle, _ uintptr, level int32, msg, name wkeString, line uint32, stack wkeString) uintptr {
 	if _this.onConsole == nil {
 		return 0
@@ -202,6 +220,7 @@ func (_this *freeMiniblink) jsConsole(_ wkeHandle, _ uintptr, level int32, msg, 
 	return 0
 }
 
+// 脚本上下文创建回调处理
 func (_this *freeMiniblink) onDidCreateScriptContext(_ wkeHandle, _ uintptr, frame wkeFrame, _ uintptr, _, _ int) uintptr {
 	_this.jsIsReady = true
 	args := new(wkeJsReadyEvArgs).init(_this, frame)
@@ -214,6 +233,7 @@ func (_this *freeMiniblink) onDidCreateScriptContext(_ wkeHandle, _ uintptr, fra
 	return 0
 }
 
+// URL 开始加载回调处理
 func (_this *freeMiniblink) onUrlBegin(_ wkeHandle, _, _ uintptr, job wkeNetJob) uintptr {
 	if _this.onRequest == nil {
 		return 0
@@ -228,6 +248,7 @@ func (_this *freeMiniblink) onUrlBegin(_ wkeHandle, _, _ uintptr, job wkeNetJob)
 	return 0
 }
 
+// URL 加载完成回调处理
 func (_this *freeMiniblink) onUrlEnd(_ wkeHandle, _, _ uintptr, job wkeNetJob, buf uintptr, len int32) uintptr {
 	if req, ok := _this.reqMap[job]; ok {
 		data := (*[1 << 30]byte)(unsafe.Pointer(buf))
@@ -240,6 +261,7 @@ func (_this *freeMiniblink) onUrlEnd(_ wkeHandle, _, _ uintptr, job wkeNetJob, b
 	return 0
 }
 
+// URL 加载失败回调处理
 func (_this *freeMiniblink) onUrlFail(_ wkeHandle, _, _ uintptr, job wkeNetJob) uintptr {
 	if req, ok := _this.reqMap[job]; ok {
 		req.onFail()
@@ -247,6 +269,7 @@ func (_this *freeMiniblink) onUrlFail(_ wkeHandle, _, _ uintptr, job wkeNetJob) 
 	return 0
 }
 
+// 设置视图控件的事件处理器
 func (_this *freeMiniblink) setView() {
 	bakFocus := _this.view.OnFocus
 	_this.view.OnFocus = func() {
@@ -351,6 +374,7 @@ func (_this *freeMiniblink) setView() {
 	}
 }
 
+// 处理输入法开始组合
 func (_this *freeMiniblink) viewImeStart() bool {
 	rect := mbApi.wkeGetCaretRect(_this.wke)
 	comp := win.COMPOSITIONFORM{
@@ -367,24 +391,28 @@ func (_this *freeMiniblink) viewImeStart() bool {
 	return true
 }
 
+// 处理按键按下事件
 func (_this *freeMiniblink) viewKeyPress(e *fm.KeyPressEvArgs) {
 	if mbApi.wkeFireKeyPressEvent(_this.wke, int([]rune(e.KeyChar)[0]), uint32(wkeKeyFlags_Repeat), e.IsSys) {
 		e.IsHandle = true
 	}
 }
 
+// 处理按键释放事件
 func (_this *freeMiniblink) viewKeyUp(e *fm.KeyEvArgs) {
 	if _this.viewKeyEvent(e, false) {
 		e.IsHandle = true
 	}
 }
 
+// 处理按键按下事件
 func (_this *freeMiniblink) viewKeyDown(e *fm.KeyEvArgs) {
 	if _this.viewKeyEvent(e, true) {
 		e.IsHandle = true
 	}
 }
 
+// 处理键盘事件
 func (_this *freeMiniblink) viewKeyEvent(e *fm.KeyEvArgs, isDown bool) bool {
 	flags := int(wkeKeyFlags_Repeat)
 	switch e.Key {
@@ -399,14 +427,17 @@ func (_this *freeMiniblink) viewKeyEvent(e *fm.KeyEvArgs, isDown bool) bool {
 	}
 }
 
+// 加载指定的 URL
 func (_this *freeMiniblink) LoadUri(uri string) {
 	mbApi.wkeLoadURL(_this.wke, uri)
 }
 
+// 加载 HTML 内容并指定基础 URL
 func (_this *freeMiniblink) LoadHtmlWithBaseUrl(html, baseUrl string) {
 	mbApi.wkeLoadHtmlWithBaseUrl(_this.wke, html, baseUrl)
 }
 
+// 设置鼠标光标类型
 func (_this *freeMiniblink) viewSetCursor() bool {
 	cur := mbApi.wkeGetCursorInfoType(_this.wke)
 	newCur := fm.CursorType_Default
@@ -430,6 +461,7 @@ func (_this *freeMiniblink) viewSetCursor() bool {
 	return true
 }
 
+// 处理鼠标滚轮事件
 func (_this *freeMiniblink) viewMouseWheel(e *fm.MouseEvArgs) {
 	flags := wkeMouseFlags_None
 	keys := cs.App.ModifierKeys()
@@ -453,14 +485,17 @@ func (_this *freeMiniblink) viewMouseWheel(e *fm.MouseEvArgs) {
 	}
 }
 
+// 处理鼠标按键释放事件
 func (_this *freeMiniblink) viewMouseUp(e *fm.MouseEvArgs) {
 	_this.viewMouseEvent(e, false)
 }
 
+// 处理鼠标按键按下事件
 func (_this *freeMiniblink) viewMouseDown(e *fm.MouseEvArgs) {
 	_this.viewMouseEvent(e, true)
 }
 
+// 处理鼠标事件
 func (_this *freeMiniblink) viewMouseEvent(e *fm.MouseEvArgs, isDown bool) {
 	flags := wkeMouseFlags_None
 	keys := cs.App.ModifierKeys()
@@ -506,6 +541,7 @@ func (_this *freeMiniblink) viewMouseEvent(e *fm.MouseEvArgs, isDown bool) {
 	}
 }
 
+// 处理鼠标移动事件
 func (_this *freeMiniblink) viewMouseMove(e *fm.MouseEvArgs) {
 	flags := wkeMouseFlags_None
 	if e.Button&fm.MouseButtons_Left != 0 {
@@ -519,6 +555,7 @@ func (_this *freeMiniblink) viewMouseMove(e *fm.MouseEvArgs) {
 	}
 }
 
+// 将 webview 内容转换为位图
 func (_this *freeMiniblink) ToBitmap() *image.RGBA {
 	w := mbApi.wkeGetWidth(_this.wke)
 	h := mbApi.wkeGetHeight(_this.wke)
@@ -529,6 +566,7 @@ func (_this *freeMiniblink) ToBitmap() *image.RGBA {
 	return view
 }
 
+// 处理绘制事件
 func (_this *freeMiniblink) viewPaint(e fm.PaintEvArgs) {
 	if _this.isBmpPaint {
 		img := _this.ToBitmap()
@@ -542,6 +580,7 @@ func (_this *freeMiniblink) viewPaint(e fm.PaintEvArgs) {
 	}
 }
 
+// 位图更新回调处理
 func (_this *freeMiniblink) onPaintBitUpdated(wke wkeHandle, _, bits uintptr, rect *wkeRect, width, _ int32) uintptr {
 	bx, by := int(rect.x), int(rect.y)
 	bw, bh := int(math.Min(float64(rect.w), float64(width))), int(math.Min(float64(rect.h), float64(mbApi.wkeGetHeight(wke))))
@@ -587,34 +626,42 @@ func (_this *freeMiniblink) onPaintBitUpdated(wke wkeHandle, _, bits uintptr, re
 	return 0
 }
 
+// 设置是否使用位图绘制模式
 func (_this *freeMiniblink) SetBmpPaintMode(b bool) {
 	_this.isBmpPaint = b
 }
 
+// 处理视图大小改变事件
 func (_this *freeMiniblink) viewResize(e fm.Rect) {
 	mbApi.wkeResize(_this.wke, uint32(e.Width), uint32(e.Height))
 }
 
+// 处理视图失去焦点事件
 func (_this *freeMiniblink) viewLostFocus() {
 	mbApi.wkeKillFocus(_this.wke)
 }
 
+// 处理视图获得焦点事件
 func (_this *freeMiniblink) viewFocus() {
 	mbApi.wkeSetFocus(_this.wke)
 }
 
+// 获取底层的 webview 句柄
 func (_this *freeMiniblink) GetHandle() wkeHandle {
 	return _this.wke
 }
 
+// 显示开发者工具
 func (_this *freeMiniblink) ShowDevTools(path string) {
 	mbApi.wkeSetDebugConfig(_this.wke, "showDevTools", path)
 }
 
+// 设置本地存储的完整路径
 func (_this *freeMiniblink) SetLocalStorageFullPath(path string) {
 	mbApi.wkeSetLocalStorageFullPath(_this.wke, path)
 }
 
+// 设置 HTTP 请求的 User-Agent 字符串
 func (_this *freeMiniblink) SetUserAgent(userAgent string) {
 	mbApi.wkeSetUserAgent(_this.wke, userAgent)
 }

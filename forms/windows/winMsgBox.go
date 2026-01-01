@@ -5,13 +5,16 @@ import (
 	w "github.com/reghtml/mblink/forms/windows/win32"
 )
 
+// winMsgBox Windows 消息框实现
 type winMsgBox struct {
 }
 
+// 初始化消息框
 func (_this *winMsgBox) init() *winMsgBox {
 	return _this
 }
 
+// 显示消息框
 func (_this *winMsgBox) Show(param fm.MsgBoxParam) fm.MsgBoxResult {
 	flag := w.MB_TASKMODAL
 	switch param.Icon {

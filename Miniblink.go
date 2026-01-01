@@ -4,13 +4,25 @@ import (
 	"image"
 )
 
+// ResponseCallback 响应回调函数类型
 type ResponseCallback func(args ResponseEvArgs)
+
+// RequestBeforeCallback 请求前回调函数类型
 type RequestBeforeCallback func(args RequestBeforeEvArgs)
+
+// JsReadyCallback JavaScript 就绪回调函数类型
 type JsReadyCallback func(args JsReadyEvArgs)
+
+// ConsoleCallback 控制台消息回调函数类型
 type ConsoleCallback func(args ConsoleEvArgs)
+
+// DocumentReadyCallback 文档就绪回调函数类型
 type DocumentReadyCallback func(args DocumentReadyEvArgs)
+
+// PaintUpdatedCallback 绘制更新回调函数类型
 type PaintUpdatedCallback func(args PaintUpdatedEvArgs)
 
+// Miniblink Miniblink 浏览器接口
 type Miniblink interface {
 	SetBmpPaintMode(b bool)
 	SetProxy(info ProxyInfo)

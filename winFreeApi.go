@@ -10,6 +10,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+// wkeProxy 代理服务器配置结构体
 type wkeProxy struct {
 	Type     int32
 	HostName [100]byte
@@ -18,15 +19,18 @@ type wkeProxy struct {
 	Password [50]byte
 }
 
+// 将两个32位整数合并为一个64位整数
 func _toInt64(low, high int32) int64 {
 	var l = int64(high)<<32 + int64(low)
 	return *(&l)
 }
 
+// 将两个指针值合并为一个 jsValue
 func _toJsValue(low, high uintptr) jsValue {
 	return jsValue(uintptr(_toInt64(int32(low), int32(high))))
 }
 
+// 将 jsValue 拆分为两个32位整数（用于32位系统）
 func _toLH(value jsValue) (low, high int32) {
 	if is64 {
 		return 0, 0
@@ -36,6 +40,7 @@ func _toLH(value jsValue) (low, high int32) {
 
 var is64 bool
 
+// winFreeApi Windows 平台下的 Miniblink API 实现
 type winFreeApi struct {
 	_dll *windows.LazyDLL
 
@@ -120,6 +125,7 @@ type winFreeApi struct {
 	_wkeSetUserAgent             *windows.LazyProc
 }
 
+// 初始化 Windows DLL 绑定并加载所有函数指针
 func (_this *winFreeApi) init() *winFreeApi {
 	is64 = unsafe.Sizeof(uintptr(0)) == 8
 	var lib *windows.LazyDLL
@@ -221,11 +227,13 @@ func (_this *winFreeApi) init() *winFreeApi {
 	return _this
 }
 
+// 获取 webview 的设备上下文句柄
 func (_this *winFreeApi) wkeGetViewDC(wke wkeHandle) uintptr {
 	r, _, _ := _this._wkeGetViewDC.Call(uintptr(wke))
 	return r
 }
 
+// 为 webview 设置代理服务器
 func (_this *winFreeApi) wkeSetViewProxy(wke wkeHandle, proxy ProxyInfo) {
 	px := wkeProxy{
 		Type: int32(proxy.Type),
@@ -247,14 +255,17 @@ func (_this *winFreeApi) wkeSetViewProxy(wke wkeHandle, proxy ProxyInfo) {
 	_this._wkeSetViewProxy.Call(uintptr(wke), uintptr(unsafe.Pointer(&px)))
 }
 
+// 设置 webview 背景是否透明
 func (_this *winFreeApi) wkeSetTransparent(wke wkeHandle, enable bool) {
 	_this._wkeSetTransparent.Call(uintptr(wke), uintptr(toBool(enable)))
 }
 
+// 设置文档加载完成时的回调函数
 func (_this *winFreeApi) wkeOnDocumentReady(wke wkeHandle, callback wkeDocumentReady2Callback, param uintptr) {
 	_this._wkeOnDocumentReady2.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 获取网络请求的原始响应头
 func (_this *winFreeApi) wkeNetGetRawResponseHead(job wkeNetJob) map[string]string {
 	r, _, _ := _this._wkeNetGetRawResponseHead.Call(uintptr(job))
 	var list []string
@@ -274,98 +285,119 @@ func (_this *winFreeApi) wkeNetGetRawResponseHead(job wkeNetJob) map[string]stri
 	return hMap
 }
 
+// 设置网络响应的 MIME 类型
 func (_this *winFreeApi) wkeNetSetMIMEType(job wkeNetJob, mime string) {
 	p := toCallStr(mime)
 	_this._wkeNetSetMIMEType.Call(uintptr(job), uintptr(unsafe.Pointer(&p[0])))
 }
 
+// 获取网络响应的 MIME 类型
 func (_this *winFreeApi) wkeNetGetMIMEType(job wkeNetJob) string {
 	r, _, _ := _this._wkeNetGetMIMEType.Call(uintptr(job))
 	return ptrToUtf8(r)
 }
 
+// 通过网络任务获取请求的 URL
 func (_this *winFreeApi) wkeNetGetUrlByJob(job wkeNetJob) string {
 	r, _, _ := _this._wkeNetGetUrlByJob.Call(uintptr(job))
 	return ptrToUtf8(r)
 }
 
+// 设置 URL 加载失败时的回调函数
 func (_this *winFreeApi) wkeOnLoadUrlFail(wke wkeHandle, callback wkeLoadUrlFailCallback, param uintptr) {
 	_this._wkeOnLoadUrlFail.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 设置 URL 加载完成时的回调函数
 func (_this *winFreeApi) wkeOnLoadUrlEnd(wke wkeHandle, callback wkeLoadUrlEndCallback, param uintptr) {
 	_this._wkeOnLoadUrlEnd.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 继续执行被挂起的网络任务
 func (_this *winFreeApi) wkeNetContinueJob(job wkeNetJob) {
 	_this._wkeNetContinueJob.Call(uintptr(job))
 }
 
+// 挂起网络任务以便异步提交
 func (_this *winFreeApi) wkeNetHoldJobToAsynCommit(job wkeNetJob) {
 	_this._wkeNetHoldJobToAsynCommit.Call(uintptr(job))
 }
 
+// 拦截网络请求以便修改
 func (_this *winFreeApi) wkeNetHookRequest(job wkeNetJob) {
 	_this._wkeNetHookRequest.Call(uintptr(job))
 }
 
+// 修改网络请求的 URL
 func (_this *winFreeApi) wkeNetChangeRequestUrl(job wkeNetJob, url string) {
 	p := toCallStr(url)
 	_this._wkeNetChangeRequestUrl.Call(uintptr(job), uintptr(unsafe.Pointer(&p[0])))
 }
 
+// 设置网络请求的 HTTP 头字段
 func (_this *winFreeApi) wkeNetSetHTTPHeaderField(job wkeNetJob, name, value string) {
 	np := toCallStr(name)
 	vp := toCallStr(value)
 	_this._wkeNetSetHTTPHeaderField.Call(uintptr(job), uintptr(unsafe.Pointer(&np[0])), uintptr(unsafe.Pointer(&vp[0])))
 }
 
+// 将 wkeString 转换为 Go 字符串
 func (_this *winFreeApi) wkeGetString(str wkeString) string {
 	r, _, _ := _this._wkeGetString.Call(uintptr(str))
 	return ptrToUtf8(r)
 }
 
+// 设置控制台消息输出的回调函数
 func (_this *winFreeApi) wkeOnConsole(wke wkeHandle, callback wkeConsoleCallback, param uintptr) {
 	_this._wkeOnConsole.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 获取指定框架的全局 JavaScript 执行上下文
 func (_this *winFreeApi) wkeGetGlobalExecByFrame(wke wkeHandle, frame wkeFrame) jsExecState {
 	r, _, _ := _this._wkeGetGlobalExecByFrame.Call(uintptr(wke), uintptr(frame))
 	return jsExecState(r)
 }
 
+// 判断指定框架是否为远程框架
 func (_this *winFreeApi) wkeIsWebRemoteFrame(wke wkeHandle, frame wkeFrame) bool {
 	r, _, _ := _this._wkeIsWebRemoteFrame.Call(uintptr(wke), uintptr(frame))
 	return r != 0
 }
 
+// 获取指定框架的 URL
 func (_this *winFreeApi) wkeGetFrameUrl(wke wkeHandle, frame wkeFrame) string {
 	r, _, _ := _this._wkeGetFrameUrl.Call(uintptr(wke), uintptr(frame))
 	return ptrToUtf8(r)
 }
 
+// 判断指定框架是否为主框架
 func (_this *winFreeApi) wkeIsMainFrame(wke wkeHandle, frame wkeFrame) bool {
 	r, _, _ := _this._wkeIsMainFrame.Call(uintptr(wke), uintptr(frame))
 	return r != 0
 }
 
+// 设置脚本上下文创建时的回调函数
 func (_this *winFreeApi) wkeOnDidCreateScriptContext(wke wkeHandle, callback wkeDidCreateScriptContextCallback, param uintptr) {
 	_this._wkeOnDidCreateScriptContext.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 取消 webview 的焦点
 func (_this *winFreeApi) wkeKillFocus(wke wkeHandle) {
 	_this._wkeKillFocus.Call(uintptr(wke))
 }
 
+// 从 JavaScript 执行上下文获取关联的 webview 句柄
 func (_this *winFreeApi) jsGetWebView(es jsExecState) wkeHandle {
 	r, _, _ := _this._jsGetWebView.Call(uintptr(es))
 	return wkeHandle(r)
 }
 
+// 销毁 webview 实例
 func (_this *winFreeApi) wkeDestroyWebView(wke wkeHandle) {
 	_this._wkeDestroyWebView.Call(uintptr(wke))
 }
 
+// 设置 JavaScript 对象的属性值
 func (_this *winFreeApi) jsSet(es jsExecState, obj jsValue, name string, value jsValue) {
 	ptr := []byte(name)
 	if is64 {
@@ -377,6 +409,7 @@ func (_this *winFreeApi) jsSet(es jsExecState, obj jsValue, name string, value j
 	}
 }
 
+// 创建一个空的 JavaScript 对象
 func (_this *winFreeApi) jsEmptyObject(es jsExecState) jsValue {
 	if is64 {
 		r, _, _ := _this._jsEmptyObject.Call(uintptr(es))
@@ -386,6 +419,7 @@ func (_this *winFreeApi) jsEmptyObject(es jsExecState) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 创建一个 JavaScript 函数对象
 func (_this *winFreeApi) jsFunction(es jsExecState, data *jsData) jsValue {
 	if is64 {
 		r, _, _ := _this._jsFunction.Call(uintptr(es), uintptr(unsafe.Pointer(data)))
@@ -395,6 +429,7 @@ func (_this *winFreeApi) jsFunction(es jsExecState, data *jsData) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 设置 JavaScript 数组指定索引的值
 func (_this *winFreeApi) jsSetAt(es jsExecState, array jsValue, index uint32, value jsValue) {
 	if is64 {
 		_this._jsSetAt.Call(uintptr(es), uintptr(array), uintptr(index), uintptr(value))
@@ -405,6 +440,7 @@ func (_this *winFreeApi) jsSetAt(es jsExecState, array jsValue, index uint32, va
 	}
 }
 
+// 设置 JavaScript 数组的长度
 func (_this *winFreeApi) jsSetLength(es jsExecState, array jsValue, length uint32) {
 	if is64 {
 		_this._jsSetLength.Call(uintptr(es), uintptr(array), uintptr(length))
@@ -414,6 +450,7 @@ func (_this *winFreeApi) jsSetLength(es jsExecState, array jsValue, length uint3
 	}
 }
 
+// 创建一个空的 JavaScript 数组
 func (_this *winFreeApi) jsEmptyArray(es jsExecState) jsValue {
 	if is64 {
 		r, _, _ := _this._jsEmptyArray.Call(uintptr(es))
@@ -423,6 +460,7 @@ func (_this *winFreeApi) jsEmptyArray(es jsExecState) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 将 Go 字符串转换为 JavaScript 字符串值
 func (_this *winFreeApi) jsString(es jsExecState, value string) jsValue {
 	ptr := toCallStr(value)
 	if is64 {
@@ -433,6 +471,7 @@ func (_this *winFreeApi) jsString(es jsExecState, value string) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 将浮点数转换为 JavaScript 数值
 func (_this *winFreeApi) jsDouble(value float64) jsValue {
 	ptr := toCallStr(strconv.FormatFloat(value, 'f', 9, 64))
 	if is64 {
@@ -443,6 +482,7 @@ func (_this *winFreeApi) jsDouble(value float64) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 将布尔值转换为 JavaScript 布尔值
 func (_this *winFreeApi) jsBoolean(value bool) jsValue {
 	if is64 {
 		r, _, _ := _this._jsBoolean.Call(uintptr(toBool(value)))
@@ -452,6 +492,7 @@ func (_this *winFreeApi) jsBoolean(value bool) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 将整数转换为 JavaScript 数值
 func (_this *winFreeApi) jsInt(value int32) jsValue {
 	if is64 {
 		r, _, _ := _this._jsInt.Call(uintptr(value))
@@ -461,6 +502,7 @@ func (_this *winFreeApi) jsInt(value int32) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 调用 JavaScript 函数
 func (_this *winFreeApi) jsCall(es jsExecState, fn, thisObject jsValue, args []jsValue) jsValue {
 	var ptr = uintptr(0)
 	if len(args) > 0 {
@@ -476,11 +518,13 @@ func (_this *winFreeApi) jsCall(es jsExecState, fn, thisObject jsValue, args []j
 	return _toJsValue(l, h)
 }
 
+// 获取 webview 的全局 JavaScript 执行上下文
 func (_this *winFreeApi) wkeGlobalExec(wke wkeHandle) jsExecState {
 	r, _, _ := _this._wkeGlobalExec.Call(uintptr(wke))
 	return jsExecState(r)
 }
 
+// 获取全局 JavaScript 变量
 func (_this *winFreeApi) jsGetGlobal(es jsExecState, name string) jsValue {
 	ptr := toCallStr(name)
 	if is64 {
@@ -491,6 +535,7 @@ func (_this *winFreeApi) jsGetGlobal(es jsExecState, name string) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 设置全局 JavaScript 变量
 func (_this *winFreeApi) jsSetGlobal(es jsExecState, name string, value jsValue) {
 	ptr := toCallStr(name)
 	if is64 {
@@ -501,6 +546,7 @@ func (_this *winFreeApi) jsSetGlobal(es jsExecState, name string, value jsValue)
 	}
 }
 
+// 执行 JavaScript 代码并返回结果
 func (_this *winFreeApi) jsEval(es jsExecState, js string) jsValue {
 	ptr := toCallStr(js)
 	if is64 {
@@ -511,6 +557,7 @@ func (_this *winFreeApi) jsEval(es jsExecState, js string) jsValue {
 	return _toJsValue(l, h)
 }
 
+// 获取 JavaScript 对象的所有属性名
 func (_this *winFreeApi) jsGetKeys(es jsExecState, value jsValue) []string {
 	var rs uintptr
 	if is64 {
@@ -545,6 +592,7 @@ func (_this *winFreeApi) jsGetKeys(es jsExecState, value jsValue) []string {
 	//return items
 }
 
+// 获取 JavaScript 对象的属性值
 func (_this *winFreeApi) jsGet(es jsExecState, value jsValue, name string) jsValue {
 	ptr := toCallStr(name)
 	if is64 {
@@ -556,6 +604,7 @@ func (_this *winFreeApi) jsGet(es jsExecState, value jsValue, name string) jsVal
 	return _toJsValue(l, h)
 }
 
+// 获取 JavaScript 数组指定索引的值
 func (_this *winFreeApi) jsGetAt(es jsExecState, value jsValue, index uint32) jsValue {
 	if is64 {
 		r, _, _ := _this._jsGetAt.Call(uintptr(es), uintptr(value), uintptr(index))
@@ -566,6 +615,7 @@ func (_this *winFreeApi) jsGetAt(es jsExecState, value jsValue, index uint32) js
 	return _toJsValue(rl, rh)
 }
 
+// 获取 JavaScript 数组或对象的长度
 func (_this *winFreeApi) jsGetLength(es jsExecState, value jsValue) int {
 	if is64 {
 		r, _, _ := _this._jsGetLength.Call(uintptr(es), uintptr(value))
@@ -576,6 +626,7 @@ func (_this *winFreeApi) jsGetLength(es jsExecState, value jsValue) int {
 	return int(r)
 }
 
+// 返回 JavaScript undefined 值
 func (_this *winFreeApi) jsUndefined() jsValue {
 	if is64 {
 		r, _, _ := _this._jsUndefined.Call()
@@ -585,6 +636,7 @@ func (_this *winFreeApi) jsUndefined() jsValue {
 	return _toJsValue(l, h)
 }
 
+// 将 JavaScript 值转换为 Go 布尔值
 func (_this *winFreeApi) jsToBoolean(es jsExecState, value jsValue) bool {
 	if is64 {
 		r, _, _ := _this._jsToBoolean.Call(uintptr(es), uintptr(value))
@@ -595,6 +647,7 @@ func (_this *winFreeApi) jsToBoolean(es jsExecState, value jsValue) bool {
 	return byte(r) != 0
 }
 
+// 将 JavaScript 值转换为 Go 浮点数
 func (_this *winFreeApi) jsToDouble(es jsExecState, value jsValue) float64 {
 	var rs uintptr
 	if is64 {
@@ -610,6 +663,7 @@ func (_this *winFreeApi) jsToDouble(es jsExecState, value jsValue) float64 {
 	return n
 }
 
+// 将 JavaScript 值转换为临时字符串
 func (_this *winFreeApi) jsToTempString(es jsExecState, value jsValue) string {
 	if is64 {
 		r, _, _ := _this._jsToTempString.Call(uintptr(es), uintptr(value))
@@ -620,6 +674,7 @@ func (_this *winFreeApi) jsToTempString(es jsExecState, value jsValue) string {
 	return ptrToUtf8(r)
 }
 
+// 获取 JavaScript 值的类型
 func (_this *winFreeApi) jsTypeOf(value jsValue) jsType {
 	if is64 {
 		r, _, _ := _this._jsTypeOf.Call(uintptr(value))
@@ -630,6 +685,7 @@ func (_this *winFreeApi) jsTypeOf(value jsValue) jsType {
 	return jsType(r)
 }
 
+// 获取 JavaScript 函数调用参数列表中指定索引的参数
 func (_this *winFreeApi) jsArg(es jsExecState, index uint32) jsValue {
 	if is64 {
 		r, _, _ := _this._jsArg.Call(uintptr(es), uintptr(index))
@@ -639,33 +695,40 @@ func (_this *winFreeApi) jsArg(es jsExecState, index uint32) jsValue {
 	return jsValue(uintptr(_toInt64(int32(l), int32(h))))
 }
 
+// 获取 JavaScript 函数调用参数的数量
 func (_this *winFreeApi) jsArgCount(es jsExecState) uint32 {
 	r, _, _ := _this._jsArgCount.Call(uintptr(es))
 	return uint32(r)
 }
 
+// 绑定 Go 函数为 JavaScript 全局函数
 func (_this *winFreeApi) wkeJsBindFunction(name string, fn wkeJsNativeFunction, param uintptr, argCount uint32) {
 	ptr := toCallStr(name)
 	_this._wkeJsBindFunction.Call(uintptr(unsafe.Pointer(&ptr[0])), syscall.NewCallbackCDecl(fn), param, uintptr(argCount))
 }
 
+// 取消网络请求
 func (_this *winFreeApi) wkeNetCancelRequest(job wkeNetJob) {
 	_this._wkeNetCancelRequest.Call(uintptr(job))
 }
 
+// 设置网络响应接收时的回调函数
 func (_this *winFreeApi) wkeNetOnResponse(wke wkeHandle, callback wkeNetResponseCallback, param uintptr) {
 	_this._wkeNetOnResponse.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 设置 URL 开始加载时的回调函数
 func (_this *winFreeApi) wkeOnLoadUrlBegin(wke wkeHandle, callback wkeLoadUrlBeginCallback, param uintptr) {
 	_this._wkeOnLoadUrlBegin.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 获取网络请求的方法类型
 func (_this *winFreeApi) wkeNetGetRequestMethod(job wkeNetJob) wkeRequestType {
 	r, _, _ := _this._wkeNetGetRequestMethod.Call(uintptr(job))
 	return wkeRequestType(r)
 }
 
+// 设置网络请求的响应数据
 func (_this *winFreeApi) wkeNetSetData(job wkeNetJob, buf []byte) {
 	if len(buf) == 0 {
 		buf = []byte{0}
@@ -673,15 +736,18 @@ func (_this *winFreeApi) wkeNetSetData(job wkeNetJob, buf []byte) {
 	_this._wkeNetSetData.Call(uintptr(job), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
 }
 
+// 获取输入光标的位置和大小
 func (_this *winFreeApi) wkeGetCaretRect(wke wkeHandle) wkeRect {
 	r, _, _ := _this._wkeGetCaretRect.Call(uintptr(wke))
 	return *((*wkeRect)(unsafe.Pointer(r)))
 }
 
+// 设置 webview 获得焦点
 func (_this *winFreeApi) wkeSetFocus(wke wkeHandle) {
 	_this._wkeSetFocus.Call(uintptr(wke))
 }
 
+// 触发按键按下事件
 func (_this *winFreeApi) wkeFireKeyPressEvent(wke wkeHandle, code int, flags uint32, isSysKey bool) bool {
 	ret, _, _ := _this._wkeFireKeyPressEvent.Call(
 		uintptr(wke),
@@ -691,6 +757,7 @@ func (_this *winFreeApi) wkeFireKeyPressEvent(wke wkeHandle, code int, flags uin
 	return byte(ret) != 0
 }
 
+// 触发按键按下事件
 func (_this *winFreeApi) wkeFireKeyDownEvent(wke wkeHandle, code, flags uint32, isSysKey bool) bool {
 	ret, _, _ := _this._wkeFireKeyDownEvent.Call(
 		uintptr(wke),
@@ -700,6 +767,7 @@ func (_this *winFreeApi) wkeFireKeyDownEvent(wke wkeHandle, code, flags uint32, 
 	return byte(ret) != 0
 }
 
+// 触发按键释放事件
 func (_this *winFreeApi) wkeFireKeyUpEvent(wke wkeHandle, code, flags uint32, isSysKey bool) bool {
 	ret, _, _ := _this._wkeFireKeyUpEvent.Call(
 		uintptr(wke),
@@ -709,11 +777,13 @@ func (_this *winFreeApi) wkeFireKeyUpEvent(wke wkeHandle, code, flags uint32, is
 	return byte(ret) != 0
 }
 
+// 获取当前鼠标光标类型
 func (_this *winFreeApi) wkeGetCursorInfoType(wke wkeHandle) wkeCursorType {
 	r, _, _ := _this._wkeGetCursorInfoType.Call(uintptr(wke))
 	return wkeCursorType(r)
 }
 
+// 触发鼠标滚轮事件
 func (_this *winFreeApi) wkeFireMouseWheelEvent(wke wkeHandle, x, y, delta, flags int32) bool {
 	r, _, _ := _this._wkeFireMouseWheelEvent.Call(
 		uintptr(wke),
@@ -724,6 +794,7 @@ func (_this *winFreeApi) wkeFireMouseWheelEvent(wke wkeHandle, x, y, delta, flag
 	return byte(r) != 0
 }
 
+// 触发鼠标事件
 func (_this *winFreeApi) wkeFireMouseEvent(wke wkeHandle, message, x, y, flags int32) bool {
 	r, _, _ := _this._wkeFireMouseEvent.Call(
 		uintptr(wke),
@@ -734,60 +805,72 @@ func (_this *winFreeApi) wkeFireMouseEvent(wke wkeHandle, message, x, y, flags i
 	return byte(r) != 0
 }
 
+// 将位图数据绘制到 webview
 func (_this *winFreeApi) wkePaint(wke wkeHandle, bits []byte, pitch uint32) {
 	_this._wkePaint.Call(uintptr(wke), uintptr(unsafe.Pointer(&bits[0])), uintptr(pitch))
 }
 
+// 获取 webview 的高度
 func (_this *winFreeApi) wkeGetHeight(wke wkeHandle) uint32 {
 	r, _, _ := _this._wkeGetHeight.Call(uintptr(wke))
 	return uint32(r)
 }
 
+// 获取 webview 的宽度
 func (_this *winFreeApi) wkeGetWidth(wke wkeHandle) uint32 {
 	r, _, _ := _this._wkeGetWidth.Call(uintptr(wke))
 	return uint32(r)
 }
 
+// 调整 webview 的大小
 func (_this *winFreeApi) wkeResize(wke wkeHandle, w, h uint32) {
 	_this._wkeResize.Call(uintptr(wke), uintptr(w), uintptr(h))
 }
 
+// 加载指定的 URL
 func (_this *winFreeApi) wkeLoadURL(wke wkeHandle, url string) {
 	ptr := toCallStr(url)
 	_this._wkeLoadURL.Call(uintptr(wke), uintptr(unsafe.Pointer(&ptr[0])))
 }
 
+// 加载 HTML 内容并指定基础 URL
 func (_this *winFreeApi) wkeLoadHtmlWithBaseUrl(wke wkeHandle, html, baseUrl string) {
 	htmlPtr := toCallStr(html)
 	baseUrlPtr := toCallStr(baseUrl)
 	_this._wkeLoadHtmlWithBaseUrl.Call(uintptr(wke), uintptr(unsafe.Pointer(&htmlPtr[0])), uintptr(unsafe.Pointer(&baseUrlPtr[0])))
 }
 
+// 设置位图更新时的回调函数
 func (_this *winFreeApi) wkeOnPaintBitUpdated(wke wkeHandle, callback wkePaintBitUpdatedCallback, param uintptr) {
 	_this._wkeOnPaintBitUpdated.Call(uintptr(wke), syscall.NewCallbackCDecl(callback), param)
 }
 
+// 将 webview 绑定到指定的窗口句柄
 func (_this *winFreeApi) wkeSetHandle(wke wkeHandle, handle uintptr) {
 	_this._wkeSetHandle.Call(uintptr(wke), handle)
 }
 
+// 创建一个新的 webview 实例
 func (_this *winFreeApi) wkeCreateWebView() wkeHandle {
 	r, _, _ := _this._wkeCreateWebView.Call()
 	return wkeHandle(r)
 }
 
+// 设置调试配置参数
 func (_this *winFreeApi) wkeSetDebugConfig(wke wkeHandle, debugString, param string) {
 	debugPtr := toCallStr(debugString)
 	paramPtr := toCallStr(param)
 	_this._wkeSetDebugConfig.Call(uintptr(wke), uintptr(unsafe.Pointer(&debugPtr[0])), uintptr(unsafe.Pointer(&paramPtr[0])))
 }
 
+// 设置本地存储的完整路径
 func (_this *winFreeApi) wkeSetLocalStorageFullPath(wke wkeHandle, path string) {
 	// 将字符串转换为 UTF-16 (WCHAR*) 指针
 	pathPtr, _ := syscall.UTF16PtrFromString(path)
 	_this._wkeSetLocalStorageFullPath.Call(uintptr(wke), uintptr(unsafe.Pointer(pathPtr)))
 }
 
+// 设置 HTTP 请求的 User-Agent 字符串
 func (_this *winFreeApi) wkeSetUserAgent(wke wkeHandle, userAgent string) {
 	ptr := toCallStr(userAgent)
 	_this._wkeSetUserAgent.Call(uintptr(wke), uintptr(unsafe.Pointer(&ptr[0])))

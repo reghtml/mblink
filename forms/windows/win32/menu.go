@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build windows
 // +build windows
 
 package win32
 
-// Constants for MENUITEMINFO.fMask
+// MENUITEMINFO.fMask 常量
 const (
 	MIIM_STATE      = 1
 	MIIM_ID         = 2
@@ -19,7 +20,7 @@ const (
 	MIIM_FTYPE      = 256
 )
 
-// Constants for MENUITEMINFO.fType
+// MENUITEMINFO.fType 常量
 const (
 	MFT_BITMAP       = 4
 	MFT_MENUBARBREAK = 32
@@ -32,7 +33,7 @@ const (
 	MFT_STRING       = 0
 )
 
-// Constants for MENUITEMINFO.fState
+// MENUITEMINFO.fState 常量
 const (
 	MFS_CHECKED   = 8
 	MFS_DEFAULT   = 4096
@@ -44,7 +45,7 @@ const (
 	MFS_UNHILITE  = 0
 )
 
-// Constants for MENUITEMINFO.hbmp*
+// MENUITEMINFO.hbmp* 常量
 const (
 	HBMMENU_CALLBACK        = -1
 	HBMMENU_SYSTEM          = 1
@@ -59,7 +60,7 @@ const (
 	HBMMENU_POPUP_MINIMIZE  = 11
 )
 
-// MENUINFO mask constants
+// MENUINFO 掩码常量
 const (
 	MIM_APPLYTOSUBMENUS = 0x80000000
 	MIM_BACKGROUND      = 0x00000002
@@ -69,7 +70,7 @@ const (
 	MIM_STYLE           = 0x00000010
 )
 
-// MENUINFO style constants
+// MENUINFO 样式常量
 const (
 	MNS_AUTODISMISS = 0x10000000
 	MNS_CHECKORBMP  = 0x04000000
@@ -84,6 +85,7 @@ const (
 	MF_BYPOSITION = 0x00000400
 )
 
+// MENUITEMINFO 菜单项信息结构
 type MENUITEMINFO struct {
 	CbSize        uint32
 	FMask         uint32
@@ -99,6 +101,7 @@ type MENUITEMINFO struct {
 	HbmpItem      HBITMAP
 }
 
+// MENUINFO 菜单信息结构
 type MENUINFO struct {
 	CbSize          uint32
 	FMask           uint32

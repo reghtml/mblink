@@ -8,6 +8,7 @@ import (
 	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
+// winForm Windows 窗体实现
 type winForm struct {
 	winContainer
 	_onClose           func() (cancel bool)
@@ -20,6 +21,7 @@ type winForm struct {
 	_isCustomMaximized bool     // 是否处于自定义最大化状态（用于无边框窗口）
 }
 
+// 初始化窗体
 func (_this *winForm) init(provider *Provider, param br.FormParam) *winForm {
 	_this.winContainer.init(provider, _this)
 	_this.onWndProc = _this.msgProc
@@ -43,6 +45,7 @@ func (_this *winForm) init(provider *Provider, param br.FormParam) *winForm {
 	return _this
 }
 
+// 处理窗口消息
 func (_this *winForm) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	rs := _this.winBase.msgProc(hWnd, msg, wParam, lParam)
 	if rs != 0 {
@@ -103,6 +106,7 @@ func (_this *winForm) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 	return rs
 }
 
+// 设置窗体是否置顶
 func (_this *winForm) SetTopMost(isTop bool) {
 	if isTop {
 		win.SetWindowPos(_this.handle, win.HWND_TOPMOST, 0, 0, 0, 0, win.SWP_NOMOVE|win.SWP_NOSIZE)
@@ -111,12 +115,14 @@ func (_this *winForm) SetTopMost(isTop bool) {
 	}
 }
 
+// 设置窗体激活回调函数
 func (_this *winForm) SetOnActive(proc br.FormActiveProc) br.FormActiveProc {
 	pre := _this._onActive
 	_this._onActive = proc
 	return pre
 }
 
+// 启用无边框窗口的调整大小功能
 func (_this *winForm) NoneBorderResize() {
 	padd := 5
 	rsState := new(int)
@@ -218,6 +224,7 @@ func (_this *winForm) NoneBorderResize() {
 	})
 }
 
+// 显示窗体
 func (_this *winForm) Show() {
 	// 如果是无边框窗口且已经最大化，使用保存的位置恢复
 	if _this.border == fm.FormBorder_None && _this._isCustomMaximized && _this.hasRestoreRect {
@@ -247,10 +254,12 @@ func (_this *winForm) Show() {
 	win.UpdateWindow(_this.handle)
 }
 
+// 关闭窗体
 func (_this *winForm) Close() {
 	win.SendMessage(_this.handle, win.WM_CLOSE, 0, 0)
 }
 
+// 以模态方式显示窗体
 func (_this *winForm) ShowDialog() {
 	acHwnd := win.GetActiveWindow()
 	if acfm, ok := _this.app.forms[acHwnd].(*winForm); ok {
@@ -347,6 +356,7 @@ func (_this *winForm) getWorkArea() win.RECT {
 	}
 }
 
+// 最大化窗体
 func (_this *winForm) ShowToMax() {
 	// 现在通过 WM_GETMINMAXINFO 处理无边框窗口的最大化（自动使用工作区域）
 	// 直接使用标准的 ShowWindow，系统会自动使用我们在 WM_GETMINMAXINFO 中设置的值
@@ -354,14 +364,17 @@ func (_this *winForm) ShowToMax() {
 	win.UpdateWindow(_this.handle)
 }
 
+// 最小化窗体
 func (_this *winForm) ShowToMin() {
 	win.ShowWindow(_this.handle, win.SW_MINIMIZE)
 }
 
+// 设置窗体标题
 func (_this *winForm) SetTitle(title string) {
 	win.SetWindowText(_this.handle, title)
 }
 
+// 设置窗体边框样式
 func (_this *winForm) SetBorderStyle(border fm.FormBorder) {
 	style := win.GetWindowLong(_this.handle, win.GWL_STYLE)
 	switch border {
@@ -379,12 +392,14 @@ func (_this *winForm) SetBorderStyle(border fm.FormBorder) {
 	_this.border = border
 }
 
+// 设置窗体状态变化回调函数
 func (_this *winForm) SetOnState(proc br.FormStateProc) br.FormStateProc {
 	pre := _this._onState
 	_this._onState = proc
 	return pre
 }
 
+// 设置是否显示最大化按钮
 func (_this *winForm) SetMaximizeBox(isShow bool) {
 	style := win.GetWindowLong(_this.handle, win.GWL_STYLE)
 	if isShow {
@@ -395,6 +410,7 @@ func (_this *winForm) SetMaximizeBox(isShow bool) {
 	win.SetWindowLong(_this.handle, win.GWL_STYLE, style)
 }
 
+// 设置是否显示最小化按钮
 func (_this *winForm) SetMinimizeBox(isShow bool) {
 	style := win.GetWindowLong(_this.handle, win.GWL_STYLE)
 	if isShow {
@@ -405,6 +421,7 @@ func (_this *winForm) SetMinimizeBox(isShow bool) {
 	win.SetWindowLong(_this.handle, win.GWL_STYLE, style)
 }
 
+// 设置窗体图标（从文件）
 func (_this *winForm) SetIcon(iconFile string) {
 	style := win.GetWindowLong(_this.handle, win.GWL_EXSTYLE)
 	if style&win.WS_EX_DLGMODALFRAME != 0 {
@@ -417,6 +434,7 @@ func (_this *winForm) SetIcon(iconFile string) {
 	}
 }
 
+// 设置窗体图标（从数据）
 func (_this *winForm) SetIconData(iconData []byte) {
 	style := win.GetWindowLong(_this.handle, win.GWL_EXSTYLE)
 	if style&win.WS_EX_DLGMODALFRAME != 0 {
@@ -432,11 +450,13 @@ func (_this *winForm) SetIconData(iconData []byte) {
 	}
 }
 
+// 启用或禁用窗体
 func (_this *winForm) Enable(b bool) {
 	_this.isEnable = b
 	win.EnableWindow(_this.handle, b)
 }
 
+// 激活窗体
 func (_this *winForm) Active() {
 	win.SetActiveWindow(_this.handle)
 }

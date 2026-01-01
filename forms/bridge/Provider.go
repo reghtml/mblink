@@ -4,11 +4,13 @@ import (
 	f "github.com/reghtml/mblink/forms"
 )
 
+// FormParam 窗体创建参数
 type FormParam struct {
 	HideInTaskbar bool
 	HideIcon      bool
 }
 
+// Provider 平台提供者接口，提供跨平台的窗体和控制功能
 type Provider interface {
 	RunMain(form Form)
 	Exit(code int)

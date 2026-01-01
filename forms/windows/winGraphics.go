@@ -7,20 +7,24 @@ import (
 	"unsafe"
 )
 
+// winGraphics Windows 图形绘制对象
 type winGraphics struct {
 	onClose func(g *winGraphics)
 	dc      win.HDC
 }
 
+// 初始化图形对象
 func (_this *winGraphics) init(hdc win.HDC) *winGraphics {
 	_this.dc = hdc
 	return _this
 }
 
+// 获取图形设备上下文句柄
 func (_this *winGraphics) GetHandle() uintptr {
 	return uintptr(_this.dc)
 }
 
+// 关闭图形对象并释放资源
 func (_this *winGraphics) Close() {
 	if _this.onClose != nil {
 		_this.onClose(_this)
@@ -28,6 +32,7 @@ func (_this *winGraphics) Close() {
 	}
 }
 
+// 绘制图像
 func (_this *winGraphics) DrawImage(src *image.RGBA, xSrc, ySrc, width, height, xDst, yDst int) fm.Graphics {
 	var head win.BITMAPV5HEADER
 	head.BiSize = uint32(unsafe.Sizeof(head))
@@ -56,6 +61,7 @@ func (_this *winGraphics) DrawImage(src *image.RGBA, xSrc, ySrc, width, height, 
 	return _this
 }
 
+// 使用设备上下文绘制
 func (_this *winGraphics) DrawByDc(dc win.HDC, xSrc, ySrc, width, height, xDst, yDst int) *winGraphics {
 	win.BitBlt(_this.dc, int32(xDst), int32(yDst), int32(width), int32(height), dc, int32(xSrc), int32(ySrc), win.SRCCOPY)
 	return _this

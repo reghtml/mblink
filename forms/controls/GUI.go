@@ -2,6 +2,7 @@ package controls
 
 import fm "github.com/reghtml/mblink/forms"
 
+// GUI 图形用户界面接口
 type GUI interface {
 	GetHandle() uintptr
 	GetBound() fm.Bound

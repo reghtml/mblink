@@ -12,6 +12,7 @@ import (
 
 var dbclickTime = win.GetDoubleClickTime()
 
+// invokeContext 异步调用上下文
 type invokeContext struct {
 	fn    func(state interface{})
 	state interface{}
@@ -21,6 +22,7 @@ const (
 	cmd_invoke = 100
 )
 
+// winBase Windows 窗口基类
 type winBase struct {
 	app       *Provider
 	handle    win.HWND
@@ -55,6 +57,7 @@ type winBase struct {
 	clickTime  time.Time
 }
 
+// 初始化窗口基类
 func (_this *winBase) init(provider *Provider) *winBase {
 	_this.app = provider
 	_this.isEnable = true
@@ -65,15 +68,18 @@ func (_this *winBase) init(provider *Provider) *winBase {
 	return _this
 }
 
+// 隐藏窗口
 func (_this *winBase) Hide() {
 	win.ShowWindow(_this.handle, win.SW_HIDE)
 }
 
+// 显示窗口
 func (_this *winBase) Show() {
 	win.ShowWindow(_this.handle, win.SW_SHOW)
 	win.UpdateWindow(_this.handle)
 }
 
+// 设置背景颜色
 func (_this *winBase) SetBgColor(color int32) {
 	_this.bgColor = color
 	var rect win.RECT
@@ -81,6 +87,7 @@ func (_this *winBase) SetBgColor(color int32) {
 	win.InvalidateRect(_this.handle, &rect, false)
 }
 
+// 设置光标类型
 func (_this *winBase) SetCursor(cursor fm.CursorType) {
 	if cursor != fm.CursorType_Default {
 		res := win.MAKEINTRESOURCE(uintptr(toWinCursor(cursor)))
@@ -89,10 +96,12 @@ func (_this *winBase) SetCursor(cursor fm.CursorType) {
 	_this.cursor = cursor
 }
 
+// 获取光标类型
 func (_this *winBase) GetCursor() fm.CursorType {
 	return _this.cursor
 }
 
+// 处理窗口消息
 func (_this *winBase) onWndMsg(hWnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	if _this.onWndProc != nil {
 		return _this.onWndProc(hWnd, msg, wParam, lParam)
@@ -100,6 +109,7 @@ func (_this *winBase) onWndMsg(hWnd win.HWND, msg uint32, wParam, lParam uintptr
 	return 0
 }
 
+// 窗口消息处理过程
 func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr) uintptr {
 	var ret uintptr
 	switch msg {
@@ -408,6 +418,7 @@ func (_this *winBase) msgProc(hWnd win.HWND, msg uint32, wParam, lParam uintptr)
 	return ret
 }
 
+// 创建图形绘制对象
 func (_this *winBase) CreateGraphics() fm.Graphics {
 	hdc := win.GetDC(_this.handle)
 	g := new(winGraphics).init(hdc)
@@ -416,12 +427,14 @@ func (_this *winBase) CreateGraphics() fm.Graphics {
 	}
 	return g
 }
+// 在主线程中异步调用函数
 func (_this *winBase) Invoke(fn func()) {
 	_this.InvokeEx(func(state interface{}) {
 		state.(func())()
 	}, fn)
 }
 
+// 在主线程中异步调用函数（带状态参数）
 func (_this *winBase) InvokeEx(fn func(state interface{}), state interface{}) {
 	ctx := invokeContext{
 		fn:    fn,
@@ -432,6 +445,7 @@ func (_this *winBase) InvokeEx(fn func(state interface{}), state interface{}) {
 	win.PostMessage(_this.handle, uint32(win.WM_COMMAND), uintptr(cmd_invoke), ptr)
 }
 
+// 执行命令消息
 func (_this *winBase) execCmd(wParam, lParam uintptr) uintptr {
 	switch int(wParam) {
 	case cmd_invoke:
@@ -444,22 +458,27 @@ func (_this *winBase) execCmd(wParam, lParam uintptr) uintptr {
 	}
 }
 
+// 获取窗口句柄
 func (_this *winBase) hWnd() win.HWND {
 	return _this.handle
 }
 
+// 获取窗口句柄（uintptr 类型）
 func (_this *winBase) GetHandle() uintptr {
 	return uintptr(_this.hWnd())
 }
 
+// 获取提供者对象
 func (_this *winBase) GetProvider() br.Provider {
 	return _this.app
 }
 
+// 检查窗口是否启用
 func (_this *winBase) IsEnable() bool {
 	return _this.isEnable
 }
 
+// 启用或禁用窗口
 func (_this *winBase) Enable(b bool) {
 	style := win.GetWindowLong(_this.handle, win.GWL_STYLE)
 	if b {
@@ -471,6 +490,7 @@ func (_this *winBase) Enable(b bool) {
 	_this.isEnable = b
 }
 
+// 设置窗口大小
 func (_this *winBase) SetSize(width, height int) {
 	wndRect := win.RECT{}
 	win.GetWindowRect(_this.handle, &wndRect)
@@ -489,10 +509,12 @@ func (_this *winBase) SetSize(width, height int) {
 	win.SetWindowPos(_this.handle, 0, 0, 0, int32(width), int32(height), win.SWP_NOMOVE|win.SWP_NOZORDER|win.SWP_NOACTIVATE)
 }
 
+// 设置窗口位置
 func (_this *winBase) SetLocation(x, y int) {
 	win.SetWindowPos(_this.handle, 0, int32(x), int32(y), 0, 0, win.SWP_NOSIZE|win.SWP_NOZORDER|win.SWP_NOACTIVATE)
 }
 
+// 获取窗口边界信息
 func (_this *winBase) GetBound() fm.Bound {
 	rect := win.RECT{}
 	win.GetWindowRect(_this.handle, &rect)
@@ -518,14 +540,17 @@ func (_this *winBase) GetBound() fm.Bound {
 	return bn
 }
 
+// 获取父控件
 func (_this *winBase) GetParent() br.Control {
 	return _this.parent
 }
 
+// 获取所属窗体
 func (_this *winBase) GetOwner() br.Form {
 	return _this.owner
 }
 
+// 将屏幕坐标转换为客户区坐标
 func (_this *winBase) ToClientPoint(p fm.Point) fm.Point {
 	sp := win.POINT{
 		X: int32(p.X),

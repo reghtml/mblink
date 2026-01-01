@@ -5,6 +5,7 @@ import (
 	br "github.com/reghtml/mblink/forms/bridge"
 )
 
+// BaseUI UI 控件基类，提供事件处理和基本功能
 type BaseUI struct {
 	EvLoad map[string]func(s GUI)
 	OnLoad func()
@@ -64,6 +65,7 @@ type BaseUI struct {
 	owner    GUI
 }
 
+// 初始化基础 UI 组件
 func (_this *BaseUI) Init(instance GUI, impl br.Window) *BaseUI {
 	_this.instance = instance
 	_this.impl = impl
@@ -307,66 +309,82 @@ func (_this *BaseUI) Init(instance GUI, impl br.Window) *BaseUI {
 	return _this
 }
 
+// 启用或禁用组件
 func (_this *BaseUI) Enable(enable bool) {
 	_this.impl.Enable(enable)
 }
 
+// 检查组件是否启用
 func (_this *BaseUI) IsEnable() bool {
 	return _this.impl.IsEnable()
 }
 
+// 创建图形绘制对象
 func (_this *BaseUI) CreateGraphics() fm.Graphics {
 	return _this.impl.CreateGraphics()
 }
 
+// 设置光标类型
 func (_this *BaseUI) SetCursor(cursor fm.CursorType) {
 	_this.impl.SetCursor(cursor)
 }
 
+// 获取光标类型
 func (_this *BaseUI) GetCursor() fm.CursorType {
 	return _this.impl.GetCursor()
 }
 
+// 获取组件句柄
 func (_this *BaseUI) GetHandle() uintptr {
 	return _this.impl.GetHandle()
 }
 
+// 设置组件位置
 func (_this *BaseUI) SetLocation(x, y int) {
 	_this.impl.SetLocation(x, y)
 }
 
+// 获取组件边界信息
 func (_this *BaseUI) GetBound() fm.Bound {
 	return _this.impl.GetBound()
 }
 
+// 设置组件大小
 func (_this *BaseUI) SetSize(width, height int) {
 	_this.impl.SetSize(width, height)
 }
 
+// 设置背景颜色
 func (_this *BaseUI) SetBgColor(color int32) {
 	_this.impl.SetBgColor(color)
 }
 
+// 在主线程中异步调用函数
 func (_this *BaseUI) Invoke(fn func()) {
 	_this.impl.Invoke(fn)
 }
 
+// 在主线程中异步调用函数（带状态参数）
 func (_this *BaseUI) InvokeEx(fn func(state interface{}), state interface{}) {
 	_this.impl.InvokeEx(fn, state)
 }
 
+// 显示组件
 func (_this *BaseUI) Show() {
 	_this.impl.Show()
 }
 
+// 隐藏组件
 func (_this *BaseUI) Hide() {
 	_this.impl.Hide()
 }
 
+// 获取父组件
 func (_this *BaseUI) GetParent() GUI {
 	return _this.parent
 }
 
+// 获取所属组件
 func (_this *BaseUI) GetOwner() GUI {
 	return _this.owner
 }

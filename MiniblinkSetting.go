@@ -15,12 +15,14 @@ func init() {
 	mbApi = new(winFreeApi).init()
 }
 
+// 创建 webview 实例并注册到全局映射表
 func createWebView(miniblink Miniblink) wkeHandle {
 	wke := mbApi.wkeCreateWebView()
 	views[wke] = miniblink
 	return wke
 }
 
+// 销毁 webview 实例并从映射表中移除
 func destroyWebView(handle wkeHandle) {
 	if _, ok := views[handle]; ok {
 		mbApi.wkeDestroyWebView(handle)
@@ -28,6 +30,7 @@ func destroyWebView(handle wkeHandle) {
 	}
 }
 
+// 绑定 JavaScript 全局函数
 func BindJsFunc(fn JsFnBinding) {
 	fn.core = func(es jsExecState, param uintptr) uintptr {
 		handle := mbApi.jsGetWebView(es)

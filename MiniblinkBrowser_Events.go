@@ -1,9 +1,10 @@
 package GoMiniblink
 
 import (
-	"github.com/reghtml/mblink/forms"
 	"image"
 	"strconv"
+
+	"github.com/reghtml/mblink/forms"
 )
 
 type PaintUpdatedEvArgs interface {
@@ -13,30 +14,36 @@ type PaintUpdatedEvArgs interface {
 	IsCancel() bool
 }
 
+// freePaintUpdatedEvArgs 绘制更新事件参数的实现
 type freePaintUpdatedEvArgs struct {
 	bitmap *image.RGBA
 	bound  forms.Bound
 	cancel bool
 }
 
+// 初始化绘制更新事件参数
 func (_this *freePaintUpdatedEvArgs) init(bitmap *image.RGBA, bound forms.Bound) *freePaintUpdatedEvArgs {
 	_this.bitmap = bitmap
 	_this.bound = bound
 	return _this
 }
 
+// 获取位图数据
 func (_this *freePaintUpdatedEvArgs) Bitmap() *image.RGBA {
 	return _this.bitmap
 }
 
+// 获取绘制区域边界
 func (_this *freePaintUpdatedEvArgs) Bound() forms.Bound {
 	return _this.bound
 }
 
+// 检查是否已取消
 func (_this *freePaintUpdatedEvArgs) IsCancel() bool {
 	return _this.cancel
 }
 
+// 取消绘制
 func (_this *freePaintUpdatedEvArgs) Cancel() {
 	_this.cancel = true
 }
@@ -45,10 +52,12 @@ type DocumentReadyEvArgs interface {
 	FrameContext
 }
 
+// freeDocumentReadyEvArgs 文档就绪事件参数的实现
 type freeDocumentReadyEvArgs struct {
 	*freeFrameContext
 }
 
+// 初始化文档就绪事件参数
 func (_this *freeDocumentReadyEvArgs) init(mb Miniblink, frame wkeFrame) *freeDocumentReadyEvArgs {
 	_this.freeFrameContext = new(freeFrameContext).init(mb, frame)
 	return _this
@@ -62,6 +71,7 @@ type FrameContext interface {
 	RunJs(script string) interface{}
 }
 
+// freeFrameContext 框架上下文的实现
 type freeFrameContext struct {
 	id       uintptr
 	isMain   bool
@@ -70,6 +80,7 @@ type freeFrameContext struct {
 	core     Miniblink
 }
 
+// 初始化框架上下文
 func (_this *freeFrameContext) init(mb Miniblink, frame wkeFrame) *freeFrameContext {
 	_this.core = mb
 	_this.id = uintptr(frame)
@@ -79,6 +90,7 @@ func (_this *freeFrameContext) init(mb Miniblink, frame wkeFrame) *freeFrameCont
 	return _this
 }
 
+// 在框架中执行 JavaScript 代码
 func (_this *freeFrameContext) RunJs(script string) interface{} {
 	if len(script) > 0 {
 		es := mbApi.wkeGetGlobalExecByFrame(_this.core.GetHandle(), wkeFrame(_this.id))
@@ -88,18 +100,22 @@ func (_this *freeFrameContext) RunJs(script string) interface{} {
 	return nil
 }
 
+// 判断框架是否为远程框架
 func (_this *freeFrameContext) IsRemote() bool {
 	return _this.isRemote
 }
 
+// 获取框架的 URL
 func (_this *freeFrameContext) Url() string {
 	return _this.url
 }
 
+// 判断是否为主框架
 func (_this *freeFrameContext) IsMain() bool {
 	return _this.isMain
 }
 
+// 获取框架 ID
 func (_this *freeFrameContext) FrameId() uintptr {
 	return _this.id
 }
@@ -112,6 +128,7 @@ type ConsoleEvArgs interface {
 	StackTrace() string
 }
 
+// freeConsoleMessageEvArgs 控制台消息事件参数的实现
 type freeConsoleMessageEvArgs struct {
 	level   string
 	message string
@@ -120,22 +137,32 @@ type freeConsoleMessageEvArgs struct {
 	stack   string
 }
 
+// 初始化控制台消息事件参数
 func (_this *freeConsoleMessageEvArgs) init() *freeConsoleMessageEvArgs {
 	return _this
 }
 
+// 获取控制台消息级别
 func (_this *freeConsoleMessageEvArgs) Level() string {
 	return _this.level
 }
+
+// 获取控制台消息内容
 func (_this *freeConsoleMessageEvArgs) Message() string {
 	return _this.message
 }
+
+// 获取消息源文件名
 func (_this *freeConsoleMessageEvArgs) SourceName() string {
 	return _this.name
 }
+
+// 获取消息源行号
 func (_this *freeConsoleMessageEvArgs) SourceLine() int {
 	return _this.line
 }
+
+// 获取堆栈跟踪信息
 func (_this *freeConsoleMessageEvArgs) StackTrace() string {
 	return _this.stack
 }
@@ -144,10 +171,12 @@ type JsReadyEvArgs interface {
 	FrameContext
 }
 
+// wkeJsReadyEvArgs JavaScript 就绪事件参数的实现
 type wkeJsReadyEvArgs struct {
 	*freeFrameContext
 }
 
+// 初始化 JavaScript 就绪事件参数
 func (_this *wkeJsReadyEvArgs) init(mb Miniblink, frame wkeFrame) *wkeJsReadyEvArgs {
 	_this.freeFrameContext = new(freeFrameContext).init(mb, frame)
 	return _this
@@ -162,38 +191,46 @@ type ResponseEvArgs interface {
 	Headers() map[string]string
 }
 
+// freeResponseEvArgs 响应事件参数的实现
 type freeResponseEvArgs struct {
 	_req  *freeRequestBeforeEvArgs
 	_data []byte
 }
 
+// 初始化响应事件参数
 func (_this *freeResponseEvArgs) init(request *freeRequestBeforeEvArgs, data []byte) *freeResponseEvArgs {
 	_this._req = request
 	_this._data = data
 	return _this
 }
 
+// 获取响应头信息
 func (_this *freeResponseEvArgs) Headers() map[string]string {
 	return mbApi.wkeNetGetRawResponseHead(_this._req._job)
 }
 
+// 设置响应数据
 func (_this *freeResponseEvArgs) SetData(data []byte) {
 	_this._data = data
 	mbApi.wkeNetSetData(_this._req._job, _this._data)
 }
 
+// 获取响应数据
 func (_this *freeResponseEvArgs) Data() []byte {
 	return _this._data
 }
 
+// 获取请求前事件参数
 func (_this *freeResponseEvArgs) RequestBefore() RequestBeforeEvArgs {
 	return _this._req
 }
 
+// 获取响应内容类型
 func (_this *freeResponseEvArgs) ContentType() string {
 	return mbApi.wkeNetGetMIMEType(_this._req._job)
 }
 
+// 设置响应内容类型
 func (_this *freeResponseEvArgs) SetContentType(contentType string) {
 	mbApi.wkeNetSetMIMEType(_this._req._job, contentType)
 }
@@ -202,15 +239,18 @@ type LoadFailEvArgs interface {
 	RequestBefore() RequestBeforeEvArgs
 }
 
+// freeLoadFailEvArgs 加载失败事件参数的实现
 type freeLoadFailEvArgs struct {
 	_req *freeRequestBeforeEvArgs
 }
 
+// 初始化加载失败事件参数
 func (_this *freeLoadFailEvArgs) init(request *freeRequestBeforeEvArgs) *freeLoadFailEvArgs {
 	_this._req = request
 	return _this
 }
 
+// 获取请求前事件参数
 func (_this *freeLoadFailEvArgs) RequestBefore() RequestBeforeEvArgs {
 	return _this._req
 }
@@ -240,6 +280,7 @@ type RequestBeforeEvArgs interface {
 	EvFinish() *EventDispatcher
 }
 
+// freeRequestBeforeEvArgs 请求前事件参数的实现
 type freeRequestBeforeEvArgs struct {
 	_wke    Miniblink
 	_job    wkeNetJob
@@ -256,6 +297,7 @@ type freeRequestBeforeEvArgs struct {
 	_evFinish      *EventDispatcher
 }
 
+// 初始化请求前事件参数
 func (_this *freeRequestBeforeEvArgs) init(wke Miniblink, job wkeNetJob) *freeRequestBeforeEvArgs {
 	_this._wke = wke
 	_this._url = mbApi.wkeNetGetUrlByJob(job)
@@ -270,35 +312,43 @@ func (_this *freeRequestBeforeEvArgs) init(wke Miniblink, job wkeNetJob) *freeRe
 	return _this
 }
 
+// 获取请求完成事件分发器
 func (_this *freeRequestBeforeEvArgs) EvFinish() *EventDispatcher {
 	return _this._evFinish
 }
 
+// 获取加载失败事件分发器
 func (_this *freeRequestBeforeEvArgs) EvLoadFail() *EventDispatcher {
 	return _this._evLoadFail
 }
 
+// 获取响应事件分发器
 func (_this *freeRequestBeforeEvArgs) EvResponse() *EventDispatcher {
 	return _this._evResponse
 }
 
+// 修改请求的 URL
 func (_this *freeRequestBeforeEvArgs) ResetUrl(url string) {
 	mbApi.wkeNetChangeRequestUrl(_this._job, url)
 	_this._url = url
 }
 
+// 设置请求头字段
 func (_this *freeRequestBeforeEvArgs) SetHeader(name, value string) {
 	mbApi.wkeNetSetHTTPHeaderField(_this._job, name, value)
 }
 
+// 设置请求数据
 func (_this *freeRequestBeforeEvArgs) SetData(data []byte) {
 	_this._data = data
 }
 
+// 获取请求数据
 func (_this *freeRequestBeforeEvArgs) Data() []byte {
 	return _this._data
 }
 
+// 获取请求方法
 func (_this *freeRequestBeforeEvArgs) Method() string {
 	t := mbApi.wkeNetGetRequestMethod(_this._job)
 	switch t {
@@ -313,10 +363,12 @@ func (_this *freeRequestBeforeEvArgs) Method() string {
 	}
 }
 
+// 获取请求的 URL
 func (_this *freeRequestBeforeEvArgs) Url() string {
 	return _this._url
 }
 
+// 设置是否取消请求
 func (_this *freeRequestBeforeEvArgs) SetCancel(b bool) {
 	_this._cancel = b
 }
@@ -361,30 +413,35 @@ func (_this *freeRequestBeforeEvArgs) onFail() {
 	}
 }
 
+// 默认请求前事件处理
 func (_this *MiniblinkBrowser) defOnRequestBefore(e RequestBeforeEvArgs) {
 	for _, v := range _this.EvRequestBefore {
 		v(_this, e)
 	}
 }
 
+// 默认 JavaScript 就绪事件处理
 func (_this *MiniblinkBrowser) defOnJsReady(e JsReadyEvArgs) {
 	for _, v := range _this.EvJsReady {
 		v(_this, e)
 	}
 }
 
+// 默认控制台事件处理
 func (_this *MiniblinkBrowser) defOnConsole(e ConsoleEvArgs) {
 	for _, v := range _this.EvConsole {
 		v(_this, e)
 	}
 }
 
+// 默认文档就绪事件处理
 func (_this *MiniblinkBrowser) defOnDocumentReady(e DocumentReadyEvArgs) {
 	for _, v := range _this.EvDocumentReady {
 		v(_this, e)
 	}
 }
 
+// 默认绘制更新事件处理
 func (_this *MiniblinkBrowser) defOnPaintUpdated(e PaintUpdatedEvArgs) {
 	for _, v := range _this.EvPaintUpdated {
 		v(_this, e)

@@ -2,19 +2,22 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build windows
 // +build windows
 
 package win32
 
 import (
-	"golang.org/x/sys/windows"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
+// MAX_PATH 最大路径长度
 const MAX_PATH = 260
 
-// Error codes
+// 错误代码
 const (
 	ERROR_SUCCESS             = 0
 	ERROR_INVALID_FUNCTION    = 1
@@ -24,7 +27,7 @@ const (
 	ERROR_MORE_DATA           = 234
 )
 
-// GlobalAlloc flags
+// GlobalAlloc 标志常量
 const (
 	GHND          = 0x0042
 	GMEM_FIXED    = 0x0000
@@ -33,7 +36,7 @@ const (
 	GPTR          = GMEM_FIXED | GMEM_ZEROINIT
 )
 
-// Predefined locale ids
+// 预定义区域设置 ID
 const (
 	LOCALE_CUSTOM_DEFAULT     LCID = 0x0c00
 	LOCALE_CUSTOM_UI_DEFAULT  LCID = 0x1400
@@ -43,7 +46,7 @@ const (
 	LOCALE_SYSTEM_DEFAULT     LCID = 0x0800
 )
 
-// LCTYPE constants
+// LCTYPE 常量
 const (
 	LOCALE_SDECIMAL          LCTYPE = 14
 	LOCALE_STHOUSAND         LCTYPE = 15
@@ -89,24 +92,27 @@ var (
 	systemTimeToFileTime               *windows.LazyProc
 )
 
+// Windows 句柄和标识符类型
 type (
-	ATOM          uint16
-	HANDLE        uintptr
-	HGLOBAL       HANDLE
-	HINSTANCE     HANDLE
-	LCID          uint32
-	LCTYPE        uint32
-	LANGID        uint16
-	HMODULE       uintptr
-	HWINEVENTHOOK HANDLE
-	HRSRC         uintptr
+	ATOM          uint16  // 原子类型
+	HANDLE        uintptr // 句柄类型
+	HGLOBAL       HANDLE  // 全局内存句柄
+	HINSTANCE     HANDLE  // 实例句柄
+	LCID          uint32  // 区域设置 ID
+	LCTYPE        uint32  // 区域设置类型
+	LANGID        uint16  // 语言 ID
+	HMODULE       uintptr // 模块句柄
+	HWINEVENTHOOK HANDLE  // Windows 事件钩子句柄
+	HRSRC         uintptr // 资源句柄
 )
 
+// FILETIME 文件时间结构
 type FILETIME struct {
 	DwLowDateTime  uint32
 	DwHighDateTime uint32
 }
 
+// NUMBERFMT 数字格式化结构
 type NUMBERFMT struct {
 	NumDigits     uint32
 	LeadingZero   uint32
@@ -116,6 +122,7 @@ type NUMBERFMT struct {
 	NegativeOrder uint32
 }
 
+// SYSTEMTIME 系统时间结构
 type SYSTEMTIME struct {
 	WYear         uint16
 	WMonth        uint16
@@ -127,6 +134,7 @@ type SYSTEMTIME struct {
 	WMilliseconds uint16
 }
 
+// ACTCTX 激活上下文结构
 type ACTCTX struct {
 	size                  uint32
 	Flags                 uint32
@@ -175,6 +183,7 @@ func init() {
 	systemTimeToFileTime = libkernel32.NewProc("SystemTimeToFileTime")
 }
 
+// 激活激活上下文
 func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
 	var cookie uintptr
 	ret, _, _ := syscall.Syscall(activateActCtx.Addr(), 2,
@@ -184,6 +193,7 @@ func ActivateActCtx(ctx HANDLE) (uintptr, bool) {
 	return cookie, ret != 0
 }
 
+// 关闭对象句柄
 func CloseHandle(hObject HANDLE) bool {
 	ret, _, _ := syscall.Syscall(closeHandle.Addr(), 1,
 		uintptr(hObject),
@@ -193,6 +203,7 @@ func CloseHandle(hObject HANDLE) bool {
 	return ret != 0
 }
 
+// 创建激活上下文
 func CreateActCtx(ctx *ACTCTX) HANDLE {
 	if ctx != nil {
 		ctx.size = uint32(unsafe.Sizeof(*ctx))
@@ -206,6 +217,7 @@ func CreateActCtx(ctx *ACTCTX) HANDLE {
 	return HANDLE(ret)
 }
 
+// 将文件时间转换为系统时间
 func FileTimeToSystemTime(lpFileTime *FILETIME, lpSystemTime *SYSTEMTIME) bool {
 	ret, _, _ := syscall.Syscall(fileTimeToSystemTime.Addr(), 2,
 		uintptr(unsafe.Pointer(lpFileTime)),
@@ -215,6 +227,7 @@ func FileTimeToSystemTime(lpFileTime *FILETIME, lpSystemTime *SYSTEMTIME) bool {
 	return ret != 0
 }
 
+// 查找资源
 func FindResource(hModule HMODULE, lpName, lpType *uint16) HRSRC {
 	ret, _, _ := syscall.Syscall(findResource.Addr(), 3,
 		uintptr(hModule),
@@ -224,6 +237,7 @@ func FindResource(hModule HMODULE, lpName, lpType *uint16) HRSRC {
 	return HRSRC(ret)
 }
 
+// 获取控制台窗口标题
 func GetConsoleTitle(lpConsoleTitle *uint16, nSize uint32) uint32 {
 	ret, _, _ := syscall.Syscall(getConsoleTitle.Addr(), 2,
 		uintptr(unsafe.Pointer(lpConsoleTitle)),
@@ -233,6 +247,7 @@ func GetConsoleTitle(lpConsoleTitle *uint16, nSize uint32) uint32 {
 	return uint32(ret)
 }
 
+// 获取控制台窗口句柄
 func GetConsoleWindow() HWND {
 	ret, _, _ := syscall.Syscall(getConsoleWindow.Addr(), 0,
 		0,
@@ -242,6 +257,7 @@ func GetConsoleWindow() HWND {
 	return HWND(ret)
 }
 
+// 获取当前线程 ID
 func GetCurrentThreadId() uint32 {
 	ret, _, _ := syscall.Syscall(getCurrentThreadId.Addr(), 0,
 		0,
@@ -251,6 +267,7 @@ func GetCurrentThreadId() uint32 {
 	return uint32(ret)
 }
 
+// 获取最后一个错误代码
 func GetLastError() uint32 {
 	ret, _, _ := syscall.Syscall(getLastError.Addr(), 0,
 		0,
@@ -260,6 +277,7 @@ func GetLastError() uint32 {
 	return uint32(ret)
 }
 
+// 获取区域设置信息
 func GetLocaleInfo(Locale LCID, LCType LCTYPE, lpLCData *uint16, cchData int32) int32 {
 	ret, _, _ := syscall.Syscall6(getLocaleInfo.Addr(), 4,
 		uintptr(Locale),
@@ -272,6 +290,7 @@ func GetLocaleInfo(Locale LCID, LCType LCTYPE, lpLCData *uint16, cchData int32) 
 	return int32(ret)
 }
 
+// 获取逻辑驱动器字符串
 func GetLogicalDriveStrings(nBufferLength uint32, lpBuffer *uint16) uint32 {
 	ret, _, _ := syscall.Syscall(getLogicalDriveStrings.Addr(), 2,
 		uintptr(nBufferLength),
@@ -281,6 +300,7 @@ func GetLogicalDriveStrings(nBufferLength uint32, lpBuffer *uint16) uint32 {
 	return uint32(ret)
 }
 
+// 获取模块句柄
 func GetModuleHandle(lpModuleName *uint16) HINSTANCE {
 	ret, _, _ := syscall.Syscall(getModuleHandle.Addr(), 1,
 		uintptr(unsafe.Pointer(lpModuleName)),
@@ -290,6 +310,7 @@ func GetModuleHandle(lpModuleName *uint16) HINSTANCE {
 	return HINSTANCE(ret)
 }
 
+// 格式化数字字符串
 func GetNumberFormat(Locale LCID, dwFlags uint32, lpValue *uint16, lpFormat *NUMBERFMT, lpNumberStr *uint16, cchNumber int32) int32 {
 	ret, _, _ := syscall.Syscall6(getNumberFormat.Addr(), 6,
 		uintptr(Locale),
@@ -302,6 +323,7 @@ func GetNumberFormat(Locale LCID, dwFlags uint32, lpValue *uint16, lpFormat *NUM
 	return int32(ret)
 }
 
+// 获取物理安装的系统内存大小
 func GetPhysicallyInstalledSystemMemory(totalMemoryInKilobytes *uint64) bool {
 	if getPhysicallyInstalledSystemMemory.Find() != nil {
 		return false
@@ -314,6 +336,7 @@ func GetPhysicallyInstalledSystemMemory(totalMemoryInKilobytes *uint64) bool {
 	return ret != 0
 }
 
+// 从配置文件获取字符串
 func GetProfileString(lpAppName, lpKeyName, lpDefault *uint16, lpReturnedString uintptr, nSize uint32) bool {
 	ret, _, _ := syscall.Syscall6(getProfileString.Addr(), 5,
 		uintptr(unsafe.Pointer(lpAppName)),
@@ -325,6 +348,7 @@ func GetProfileString(lpAppName, lpKeyName, lpDefault *uint16, lpReturnedString 
 	return ret != 0
 }
 
+// 获取线程区域设置
 func GetThreadLocale() LCID {
 	ret, _, _ := syscall.Syscall(getThreadLocale.Addr(), 0,
 		0,
@@ -334,6 +358,7 @@ func GetThreadLocale() LCID {
 	return LCID(ret)
 }
 
+// 获取线程 UI 语言
 func GetThreadUILanguage() LANGID {
 	if getThreadUILanguage.Find() != nil {
 		return 0
@@ -347,6 +372,7 @@ func GetThreadUILanguage() LANGID {
 	return LANGID(ret)
 }
 
+// 获取操作系统版本信息
 func GetVersion() uint32 {
 	ret, _, _ := syscall.Syscall(getVersion.Addr(), 0,
 		0,
@@ -355,6 +381,7 @@ func GetVersion() uint32 {
 	return uint32(ret)
 }
 
+// 分配全局内存
 func GlobalAlloc(uFlags uint32, dwBytes uintptr) HGLOBAL {
 	ret, _, _ := syscall.Syscall(globalAlloc.Addr(), 2,
 		uintptr(uFlags),
@@ -364,6 +391,7 @@ func GlobalAlloc(uFlags uint32, dwBytes uintptr) HGLOBAL {
 	return HGLOBAL(ret)
 }
 
+// 释放全局内存
 func GlobalFree(hMem HGLOBAL) HGLOBAL {
 	ret, _, _ := syscall.Syscall(globalFree.Addr(), 1,
 		uintptr(hMem),
@@ -373,6 +401,7 @@ func GlobalFree(hMem HGLOBAL) HGLOBAL {
 	return HGLOBAL(ret)
 }
 
+// 锁定全局内存并返回指针
 func GlobalLock(hMem HGLOBAL) unsafe.Pointer {
 	ret, _, _ := syscall.Syscall(globalLock.Addr(), 1,
 		uintptr(hMem),
@@ -382,6 +411,7 @@ func GlobalLock(hMem HGLOBAL) unsafe.Pointer {
 	return unsafe.Pointer(ret)
 }
 
+// 解锁全局内存
 func GlobalUnlock(hMem HGLOBAL) bool {
 	ret, _, _ := syscall.Syscall(globalUnlock.Addr(), 1,
 		uintptr(hMem),
@@ -391,6 +421,7 @@ func GlobalUnlock(hMem HGLOBAL) bool {
 	return ret != 0
 }
 
+// 移动内存块
 func MoveMemory(destination, source unsafe.Pointer, length uintptr) {
 	syscall.Syscall(moveMemory.Addr(), 3,
 		uintptr(unsafe.Pointer(destination)),
@@ -398,6 +429,7 @@ func MoveMemory(destination, source unsafe.Pointer, length uintptr) {
 		uintptr(length))
 }
 
+// 执行整数乘法和除法运算
 func MulDiv(nNumber, nNumerator, nDenominator int32) int32 {
 	ret, _, _ := syscall.Syscall(mulDiv.Addr(), 3,
 		uintptr(nNumber),
@@ -407,6 +439,7 @@ func MulDiv(nNumber, nNumerator, nDenominator int32) int32 {
 	return int32(ret)
 }
 
+// 加载资源
 func LoadResource(hModule HMODULE, hResInfo HRSRC) HGLOBAL {
 	ret, _, _ := syscall.Syscall(loadResource.Addr(), 2,
 		uintptr(hModule),
@@ -416,6 +449,7 @@ func LoadResource(hModule HMODULE, hResInfo HRSRC) HGLOBAL {
 	return HGLOBAL(ret)
 }
 
+// 锁定资源内存
 func LockResource(hResData HGLOBAL) uintptr {
 	ret, _, _ := syscall.Syscall(lockResource.Addr(), 1,
 		uintptr(hResData),
@@ -425,6 +459,7 @@ func LockResource(hResData HGLOBAL) uintptr {
 	return ret
 }
 
+// 设置最后一个错误代码
 func SetLastError(dwErrorCode uint32) {
 	syscall.Syscall(setLastError.Addr(), 1,
 		uintptr(dwErrorCode),
@@ -432,6 +467,7 @@ func SetLastError(dwErrorCode uint32) {
 		0)
 }
 
+// 获取资源大小
 func SizeofResource(hModule HMODULE, hResInfo HRSRC) uint32 {
 	ret, _, _ := syscall.Syscall(sizeofResource.Addr(), 2,
 		uintptr(hModule),
@@ -441,6 +477,7 @@ func SizeofResource(hModule HMODULE, hResInfo HRSRC) uint32 {
 	return uint32(ret)
 }
 
+// 将系统时间转换为文件时间
 func SystemTimeToFileTime(lpSystemTime *SYSTEMTIME, lpFileTime *FILETIME) bool {
 	ret, _, _ := syscall.Syscall(systemTimeToFileTime.Addr(), 2,
 		uintptr(unsafe.Pointer(lpSystemTime)),

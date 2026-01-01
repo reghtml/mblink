@@ -5,12 +5,14 @@ import (
 	br "github.com/reghtml/mblink/forms/bridge"
 )
 
+// Container 容器接口
 type Container interface {
 	GUI
 
 	toControls() br.Controls
 }
 
+// Child 子控件接口
 type Child interface {
 	GUI
 
@@ -21,6 +23,7 @@ type Child interface {
 	SetAnchor(style fm.AnchorStyle)
 }
 
+// BaseContainer 容器基类，管理子控件的布局和锚定
 type BaseContainer struct {
 	Childs map[uintptr]Child
 
@@ -28,6 +31,7 @@ type BaseContainer struct {
 	logs      map[uintptr]fm.Bound2
 }
 
+// 初始化容器
 func (_this *BaseContainer) Init(container Container) *BaseContainer {
 	_this.Childs = make(map[uintptr]Child)
 	_this.logs = make(map[uintptr]fm.Bound2)
@@ -88,6 +92,7 @@ func (_this *BaseContainer) onAnchor(rect fm.Rect) {
 	}
 }
 
+// 添加子控件
 func (_this *BaseContainer) AddChild(child Child) {
 	if _, ok := _this.Childs[child.GetHandle()]; ok == false {
 		_this.container.toControls().AddControl(child.toControl())
@@ -110,6 +115,7 @@ func (_this *BaseContainer) AddChild(child Child) {
 	}
 }
 
+// 移除子控件
 func (_this *BaseContainer) RemoveChild(child Child) {
 	if _, ok := _this.Childs[child.GetHandle()]; ok {
 		_this.container.toControls().RemoveControl(child.toControl())

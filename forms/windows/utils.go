@@ -9,6 +9,7 @@ import (
 	"syscall"
 )
 
+// 在容器中查找指定句柄的子窗口
 func findChild(container br.Controls, hWnd win.HWND) br.Window {
 	if container.GetHandle() == uintptr(hWnd) {
 		return container
@@ -26,6 +27,7 @@ func findChild(container br.Controls, hWnd win.HWND) br.Window {
 	return nil
 }
 
+// 将 int32 颜色值转换为 RGBA
 func intToRGBA(rgba int32) color.RGBA {
 	return color.RGBA{
 		R: uint8(rgba),
@@ -35,6 +37,7 @@ func intToRGBA(rgba int32) color.RGBA {
 	}
 }
 
+// 判断是否为扩展键
 func isExtendKey(key fm.Keys) bool {
 	switch key {
 	case fm.Keys_Insert, fm.Keys_Delete, fm.Keys_Home, fm.Keys_End, fm.Keys_PageUp,
@@ -45,6 +48,7 @@ func isExtendKey(key fm.Keys) bool {
 	}
 }
 
+// 将光标类型转换为 Windows 光标资源 ID
 func toWinCursor(cursor fm.CursorType) int {
 	switch cursor {
 	case fm.CursorType_ARROW:
@@ -84,6 +88,7 @@ func toWinCursor(cursor fm.CursorType) int {
 	}
 }
 
+// 将 Windows 光标资源 ID 转换为光标类型
 func winCursorTo(cursor int) fm.CursorType {
 	switch cursor {
 	case win.IDC_ARROW:
@@ -123,6 +128,7 @@ func winCursorTo(cursor int) fm.CursorType {
 	}
 }
 
+// 将 Windows 虚拟键码转换为按键类型
 func vkToKey(vk int) fm.Keys {
 	switch vk {
 	case win.VK_ESCAPE:
@@ -338,6 +344,7 @@ func vkToKey(vk int) fm.Keys {
 	}
 }
 
+// 将按键类型转换为 Windows 虚拟键码
 func keyToVk(key fm.Keys) int {
 	switch key {
 	case fm.Keys_Esc:
@@ -554,6 +561,7 @@ func keyToVk(key fm.Keys) int {
 	}
 }
 
+// 将 Go 字符串转换为 Windows UTF-16 字符串指针
 func sto16(str string) *uint16 {
 	ptr, _ := syscall.UTF16PtrFromString(str)
 	return ptr

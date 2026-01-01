@@ -11,6 +11,7 @@ import (
 	"unsafe"
 )
 
+// fnJsData JavaScript 函数数据包装结构
 type fnJsData struct {
 	jsData
 	fnName string
@@ -18,12 +19,14 @@ type fnJsData struct {
 	mb     Miniblink
 }
 
+// 初始化 JavaScript 函数数据对象
 func (_this *fnJsData) init(name string) *fnJsData {
 	_this.name = [100]byte{'f', 'u', 'n', 'c', 't', 'i', 'o', 'n'}
 	_this.fnName = name
 	return _this
 }
 
+// 将 Go 值转换为 JavaScript 值
 func toJsValue(mb Miniblink, es jsExecState, value interface{}) jsValue {
 	if value == nil {
 		return mbApi.jsUndefined()
@@ -125,16 +128,19 @@ func toJsValue(mb Miniblink, es jsExecState, value interface{}) jsValue {
 	panic("不支持的go类型：" + rv.Kind().String() + "(" + rv.Type().String() + ")")
 }
 
+// 删除临时 JavaScript 函数的回调
 func deleteTempFunc(ptr uintptr) uintptr {
 	data := (*fnJsData)(unsafe.Pointer(ptr))
 	delete(keepRef, data.fnName)
 	return 0
 }
 
+// 在 x86 架构下执行临时函数的包装函数
 func execTempFuncX86(es jsExecState, _, _, _ uintptr, count uint32) uintptr {
 	return execTempFunc(es, 0, 0, count)
 }
 
+// 执行临时 JavaScript 函数
 func execTempFunc(es jsExecState, _, _ jsValue, count uint32) uintptr {
 	wke := mbApi.jsGetWebView(es)
 	mb := views[wke]
@@ -156,6 +162,7 @@ func execTempFunc(es jsExecState, _, _ jsValue, count uint32) uintptr {
 	return 0
 }
 
+// 将 JavaScript 值转换为 Go 值
 func toGoValue(mb Miniblink, es jsExecState, value jsValue) interface{} {
 	switch mbApi.jsTypeOf(value) {
 	case jsType_NULL, jsType_UNDEFINED:
@@ -201,11 +208,13 @@ func toGoValue(mb Miniblink, es jsExecState, value jsValue) interface{} {
 
 var seed uint64 = 0
 
+// 生成一个递增的唯一序列号
 func seq() uint64 {
 	seed++
 	return seed
 }
 
+// 将 Go 布尔值转换为 C 布尔值（1或0）
 func toBool(b bool) byte {
 	if b {
 		return 1
@@ -214,6 +223,7 @@ func toBool(b bool) byte {
 	}
 }
 
+// 将 Go 字符串转换为 C 风格的 null 终止字符串
 func toCallStr(str string) []byte {
 	buf := []byte(str)
 	rs := make([]byte, len(str)+1)
@@ -223,6 +233,7 @@ func toCallStr(str string) []byte {
 	return rs
 }
 
+// 将 C 字符串指针转换为 Go UTF-8 字符串
 func ptrToUtf8(ptr uintptr) string {
 	var seq []byte
 	for {
@@ -237,6 +248,7 @@ func ptrToUtf8(ptr uintptr) string {
 	return string(seq)
 }
 
+// 检查指定路径是否存在
 func pathExists(path string) bool {
 	_, err := os.Stat(path)
 	if err == nil {

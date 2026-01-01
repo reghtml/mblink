@@ -8,11 +8,13 @@ type (
 	jsValue     int64
 )
 
+// wkeSlist 字符串链表结构
 type wkeSlist struct {
 	str  uintptr
 	next uintptr
 }
 
+// jsType JavaScript 值类型
 type jsType uint32
 
 const (
@@ -26,6 +28,7 @@ const (
 	jsType_NULL
 )
 
+// jsData JavaScript 函数数据
 type jsData struct {
 	name [100]byte
 	propertyGet,
@@ -34,11 +37,13 @@ type jsData struct {
 	callAsFunction uintptr
 }
 
+// jsKeys JavaScript 对象键列表
 type jsKeys struct {
 	length uint32
 	first  uintptr
 }
 
+// wkeRequestType 网络请求类型
 type wkeRequestType int
 
 const (
@@ -48,6 +53,7 @@ const (
 	wkeRequestType_Put    = 4
 )
 
+// wkeKeyFlags 键盘事件标志
 type wkeKeyFlags int
 
 const (
@@ -55,12 +61,15 @@ const (
 	wkeKeyFlags_Repeat wkeKeyFlags = 0x4000
 )
 
+// wkeRect 矩形区域结构
 type wkeRect struct {
 	x, y, w, h int32
 }
 
+// wkeNetJob 网络任务句柄
 type wkeNetJob uintptr
 
+// wkeMouseFlags 鼠标事件标志
 type wkeMouseFlags int
 
 const (
@@ -72,6 +81,7 @@ const (
 	wkeMouseFlags_MBUTTON wkeMouseFlags = 0x10
 )
 
+// wkeConsoleLevel 控制台消息级别
 type wkeConsoleLevel int
 
 const (

@@ -5,6 +5,7 @@ import (
 	br "github.com/reghtml/mblink/forms/bridge"
 )
 
+// Control 控件基类
 type Control struct {
 	BaseUI
 
@@ -12,6 +13,7 @@ type Control struct {
 	anchor fm.AnchorStyle
 }
 
+// 初始化控件
 func (_this *Control) Init() *Control {
 	_this.impl = App.NewControl()
 	_this.BaseUI.Init(_this, _this.impl)
@@ -20,10 +22,12 @@ func (_this *Control) Init() *Control {
 	return _this
 }
 
+// 获取控件的锚定样式
 func (_this *Control) GetAnchor() fm.AnchorStyle {
 	return _this.anchor
 }
 
+// 设置控件的锚定样式
 func (_this *Control) SetAnchor(style fm.AnchorStyle) {
 	_this.anchor = style
 	if _this.parent != nil {

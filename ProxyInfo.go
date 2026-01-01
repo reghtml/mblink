@@ -1,5 +1,6 @@
 package GoMiniblink
 
+// ProxyType 代理服务器类型
 type ProxyType int
 
 const (
@@ -11,6 +12,7 @@ const (
 	ProxyType_SOCKS5HOSTNAME
 )
 
+// ProxyInfo 代理服务器配置信息
 type ProxyInfo struct {
 	Type     ProxyType
 	HostName string

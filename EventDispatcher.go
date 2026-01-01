@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// EventDispatcher 事件分发器，用于管理和触发事件
 type EventDispatcher struct {
 	_seq    uint64
 	_key    string
@@ -12,16 +13,19 @@ type EventDispatcher struct {
 	_fnMap  map[string]interface{}
 }
 
+// 初始化事件分发器
 func (_this *EventDispatcher) Init(key string) *EventDispatcher {
 	_this._key = key
 	_this._fnMap = make(map[string]interface{})
 	return _this
 }
 
+// 检查事件分发器是否为空
 func (_this *EventDispatcher) IsEmtpy() bool {
 	return len(_this._fnkeys) == 0
 }
 
+// 添加事件处理器
 func (_this *EventDispatcher) Add(name string, fn interface{}) {
 	if _, ok := _this._fnMap[name]; ok == false {
 		_this._fnMap[name] = fn
@@ -29,6 +33,7 @@ func (_this *EventDispatcher) Add(name string, fn interface{}) {
 	}
 }
 
+// 添加事件处理器并返回自动生成的名称
 func (_this *EventDispatcher) AddEx(fn interface{}) string {
 	name := "fn" + strconv.FormatUint(_this._seq, 10)
 	_this.Add(name, fn)
@@ -36,6 +41,7 @@ func (_this *EventDispatcher) AddEx(fn interface{}) string {
 	return name
 }
 
+// 移除指定名称的事件处理器
 func (_this *EventDispatcher) Remove(name string) interface{} {
 	if v, ok := _this._fnMap[name]; ok {
 		delete(_this._fnMap, name)
@@ -50,6 +56,7 @@ func (_this *EventDispatcher) Remove(name string) interface{} {
 	return nil
 }
 
+// 触发事件并调用所有注册的处理器
 func (_this *EventDispatcher) Fire(key string, sender interface{}, param ...interface{}) {
 	if key != _this._key {
 		panic("key不正确")
@@ -68,6 +75,7 @@ func (_this *EventDispatcher) Fire(key string, sender interface{}, param ...inte
 	}
 }
 
+// 清空所有事件处理器
 func (_this *EventDispatcher) Clear() {
 	_this._seq = 0
 	_this._fnkeys = make([]string, 0)

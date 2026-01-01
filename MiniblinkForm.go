@@ -16,6 +16,7 @@ var (
 	_fnDrop  = "__formDrop"
 )
 
+// MiniblinkForm 包含 Miniblink 浏览器的窗体
 type MiniblinkForm struct {
 	cs.Form
 	View *MiniblinkBrowser
@@ -25,10 +26,12 @@ type MiniblinkForm struct {
 	resizeState   int
 }
 
+// 初始化窗体（使用默认参数）
 func (_this *MiniblinkForm) Init() *MiniblinkForm {
 	return _this.InitEx(br.FormParam{})
 }
 
+// 使用指定参数初始化窗体
 func (_this *MiniblinkForm) InitEx(param br.FormParam) *MiniblinkForm {
 	_this.Form.InitEx(param)
 	_this.View = new(MiniblinkBrowser).Init()
@@ -157,6 +160,7 @@ func (_this *MiniblinkForm) setOn() {
 	}
 }
 
+// 启用透明模式
 func (_this *MiniblinkForm) TransparentMode() {
 	_this.isTransparent = true
 	_this.SetBorderStyle(fm.FormBorder_None)
@@ -274,6 +278,7 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 // 7 8 9    左上  上中  右上
 // 4 5 6    左中  中间  右中
 // 1 2 3    左下  下中  右下
+// 设置窗体大小和位置
 func (_this *MiniblinkForm) SetSizeAndPosition(width, height, position int) {
 	_this.SetSize(width, height)
 	screen := cs.App.GetScreen()

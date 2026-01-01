@@ -1,14 +1,17 @@
 package windows
 
 import (
-	win "github.com/reghtml/mblink/forms/windows/win32"
 	"unsafe"
+
+	win "github.com/reghtml/mblink/forms/windows/win32"
 )
 
+// winControl Windows 控件实现
 type winControl struct {
 	winBase
 }
 
+// 初始化控件
 func (_this *winControl) init(provider *Provider) *winControl {
 	_this.winBase.init(provider)
 	win.CreateWindowEx(

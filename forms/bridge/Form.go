@@ -4,9 +4,13 @@ import (
 	fm "github.com/reghtml/mblink/forms"
 )
 
+// FormStateProc 窗体状态变化回调函数类型
 type FormStateProc func(state fm.FormState)
+
+// FormActiveProc 窗体激活回调函数类型
 type FormActiveProc func()
 
+// Form 窗体接口
 type Form interface {
 	Controls
 

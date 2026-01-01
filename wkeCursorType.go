@@ -1,5 +1,6 @@
 package GoMiniblink
 
+// wkeCursorType 光标类型
 type wkeCursorType int
 
 const (

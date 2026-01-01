@@ -4,6 +4,7 @@ import (
 	"github.com/reghtml/mblink/forms/bridge"
 )
 
+// MainForm 主窗体接口
 type MainForm interface {
 	getFormImpl() bridge.Form
 }

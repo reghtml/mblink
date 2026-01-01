@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build windows
 // +build windows
 
 package win32
@@ -808,6 +809,7 @@ type PIXELFORMATDESCRIPTOR struct {
 	DwDamageMask    uint32
 }
 
+// LOGFONT 逻辑字体结构
 type LOGFONT struct {
 	LfHeight         int32
 	LfWidth          int32
@@ -825,6 +827,7 @@ type LOGFONT struct {
 	LfFaceName       [LF_FACESIZE]uint16
 }
 
+// TEXTMETRIC 文本度量结构
 type TEXTMETRIC struct {
 	TmHeight           int32
 	TmAscent           int32
@@ -848,6 +851,7 @@ type TEXTMETRIC struct {
 	TmCharSet          byte
 }
 
+// DEVMODE 设备模式结构
 type DEVMODE struct {
 	DmDeviceName       [CCHDEVICENAME]uint16
 	DmSpecVersion      uint16
@@ -885,18 +889,22 @@ type DEVMODE struct {
 	DmPanningHeight    uint32
 }
 
+// POINT 点结构
 type POINT struct {
 	X, Y int32
 }
 
+// RECT 矩形结构
 type RECT struct {
 	Left, Top, Right, Bottom int32
 }
 
+// SIZE 尺寸结构
 type SIZE struct {
 	CX, CY int32
 }
 
+// DOCINFO 文档信息结构
 type DOCINFO struct {
 	CbSize       int32
 	LpszDocName  *uint16
@@ -905,20 +913,24 @@ type DOCINFO struct {
 	FwType       uint32
 }
 
+// LOGBRUSH 逻辑画刷结构
 type LOGBRUSH struct {
 	LbStyle uint32
 	LbColor COLORREF
 	LbHatch uintptr
 }
 
+// CIEXYZ CIE XYZ 颜色空间结构
 type CIEXYZ struct {
 	CiexyzX, CiexyzY, CiexyzZ int32 // FXPT2DOT30
 }
 
+// CIEXYZTRIPLE CIE XYZ 三元组结构
 type CIEXYZTRIPLE struct {
 	CiexyzRed, CiexyzGreen, CiexyzBlue CIEXYZ
 }
 
+// BITMAPINFOHEADER 位图信息头结构
 type BITMAPINFOHEADER struct {
 	BiSize          uint32
 	BiWidth         int32
@@ -933,6 +945,7 @@ type BITMAPINFOHEADER struct {
 	BiClrImportant  uint32
 }
 
+// BITMAPV4HEADER 位图 V4 信息头结构
 type BITMAPV4HEADER struct {
 	BITMAPINFOHEADER
 	BV4RedMask    uint32
@@ -946,6 +959,7 @@ type BITMAPV4HEADER struct {
 	BV4GammaBlue  uint32
 }
 
+// BITMAPV5HEADER 位图 V5 信息头结构
 type BITMAPV5HEADER struct {
 	BITMAPV4HEADER
 	BV5Intent      uint32
@@ -954,6 +968,7 @@ type BITMAPV5HEADER struct {
 	BV5Reserved    uint32
 }
 
+// RGBQUAD RGB 四元组结构
 type RGBQUAD struct {
 	RgbBlue     byte
 	RgbGreen    byte
@@ -961,11 +976,13 @@ type RGBQUAD struct {
 	RgbReserved byte
 }
 
+// BITMAPINFO 位图信息结构
 type BITMAPINFO struct {
 	BmiHeader BITMAPINFOHEADER
 	BmiColors *RGBQUAD
 }
 
+// BITMAP 位图结构
 type BITMAP struct {
 	BmType       int32
 	BmWidth      int32
@@ -976,6 +993,7 @@ type BITMAP struct {
 	BmBits       unsafe.Pointer
 }
 
+// DIBSECTION DIB 节结构
 type DIBSECTION struct {
 	DsBm        BITMAP
 	DsBmih      BITMAPINFOHEADER
@@ -984,6 +1002,7 @@ type DIBSECTION struct {
 	DsOffset    uint32
 }
 
+// ENHMETAHEADER 增强型图元文件头结构
 type ENHMETAHEADER struct {
 	IType          uint32
 	NSize          uint32
@@ -1006,6 +1025,7 @@ type ENHMETAHEADER struct {
 	SzlMicrometers SIZE
 }
 
+// TRIVERTEX 三顶点结构
 type TRIVERTEX struct {
 	X     int32
 	Y     int32
@@ -1020,12 +1040,14 @@ type GRADIENT_RECT struct {
 	LowerRight uint32
 }
 
+// GRADIENT_TRIANGLE 渐变三角形结构
 type GRADIENT_TRIANGLE struct {
 	Vertex1 uint32
 	Vertex2 uint32
 	Vertex3 uint32
 }
 
+// BLENDFUNCTION 混合函数结构
 type BLENDFUNCTION struct {
 	BlendOp             byte
 	BlendFlags          byte

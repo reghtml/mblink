@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build windows
 // +build windows
 
 package win32
@@ -1467,11 +1468,13 @@ const (
 	WB_ISDELIMITER = 2
 )
 
+// NMBCDROPDOWN 按钮下拉通知结构
 type NMBCDROPDOWN struct {
 	Hdr      NMHDR
 	RcButton RECT
 }
 
+// MONITORINFO 监视器信息结构
 type MONITORINFO struct {
 	CbSize    uint32
 	RcMonitor RECT
@@ -1479,17 +1482,19 @@ type MONITORINFO struct {
 	DwFlags   uint32
 }
 
+// Windows 用户界面句柄类型
 type (
-	HACCEL    HANDLE
-	HCURSOR   HANDLE
-	HDWP      HANDLE
-	HICON     HANDLE
-	HMENU     HANDLE
-	HMONITOR  HANDLE
-	HRAWINPUT HANDLE
-	HWND      HANDLE
+	HACCEL    HANDLE // 加速器表句柄
+	HCURSOR   HANDLE // 光标句柄
+	HDWP      HANDLE // 窗口位置句柄
+	HICON     HANDLE // 图标句柄
+	HMENU     HANDLE // 菜单句柄
+	HMONITOR  HANDLE // 监视器句柄
+	HRAWINPUT HANDLE // 原始输入句柄
+	HWND      HANDLE // 窗口句柄
 )
 
+// MSG Windows 消息结构
 type MSG struct {
 	HWnd    HWND
 	Message uint32
@@ -1499,6 +1504,7 @@ type MSG struct {
 	Pt      POINT
 }
 
+// RAWINPUTDEVICE 原始输入设备结构
 type RAWINPUTDEVICE struct {
 	UsUsagePage uint16
 	UsUsage     uint16
@@ -1506,6 +1512,7 @@ type RAWINPUTDEVICE struct {
 	HwndTarget  HWND
 }
 
+// RAWINPUTHEADER 原始输入头结构
 type RAWINPUTHEADER struct {
 	DwType  uint32
 	DwSize  uint32
@@ -1513,21 +1520,25 @@ type RAWINPUTHEADER struct {
 	WParam  uintptr
 }
 
+// RAWINPUTMOUSE 原始输入鼠标结构
 type RAWINPUTMOUSE struct {
 	Header RAWINPUTHEADER
 	Data   RAWMOUSE
 }
 
+// RAWINPUTKEYBOARD 原始输入键盘结构
 type RAWINPUTKEYBOARD struct {
 	Header RAWINPUTHEADER
 	Data   RAWKEYBOARD
 }
 
+// RAWINPUTHID 原始输入 HID 结构
 type RAWINPUTHID struct {
 	Header RAWINPUTHEADER
 	Data   RAWHID
 }
 
+// RAWMOUSE 原始鼠标数据结构
 type RAWMOUSE struct {
 	UsFlags            uint16
 	UsButtonFlags      uint16
@@ -1539,6 +1550,7 @@ type RAWMOUSE struct {
 	UlExtraInformation uint32
 }
 
+// RAWKEYBOARD 原始键盘数据结构
 type RAWKEYBOARD struct {
 	MakeCode         uint16
 	Flags            uint16
@@ -1548,18 +1560,21 @@ type RAWKEYBOARD struct {
 	ExtraInformation uint32
 }
 
+// RAWHID 原始 HID 数据结构
 type RAWHID struct {
 	DwSizeHid uint32
 	DwCount   uint32
 	BRawData  [1]byte
 }
 
+// NMHDR 通知消息头结构
 type NMHDR struct {
 	HwndFrom HWND
 	IdFrom   uintptr
 	Code     uint32
 }
 
+// CREATESTRUCT 窗口创建结构
 type CREATESTRUCT struct {
 	CreateParams    uintptr
 	Instance        HINSTANCE
@@ -1574,11 +1589,13 @@ type CREATESTRUCT struct {
 	ExStyle         uint64
 }
 
+// CHANGEFILTERSTRUCT 消息过滤器变更结构
 type CHANGEFILTERSTRUCT struct {
 	size      uint32
 	extStatus uint32
 }
 
+// WNDCLASSEX 扩展窗口类结构
 type WNDCLASSEX struct {
 	CbSize        uint32
 	Style         uint32
@@ -1594,11 +1611,13 @@ type WNDCLASSEX struct {
 	HIconSm       HICON
 }
 
+// TPMPARAMS 跟踪弹出菜单参数结构
 type TPMPARAMS struct {
 	CbSize    uint32
 	RcExclude RECT
 }
 
+// WINDOWPLACEMENT 窗口位置结构
 type WINDOWPLACEMENT struct {
 	Length           uint32
 	Flags            uint32
@@ -1608,6 +1627,7 @@ type WINDOWPLACEMENT struct {
 	RcNormalPosition RECT
 }
 
+// DRAWTEXTPARAMS 绘制文本参数结构
 type DRAWTEXTPARAMS struct {
 	CbSize        uint32
 	ITabLength    int32
@@ -1616,6 +1636,7 @@ type DRAWTEXTPARAMS struct {
 	UiLengthDrawn uint32
 }
 
+// PAINTSTRUCT 绘制结构
 type PAINTSTRUCT struct {
 	Hdc         HDC
 	FErase      BOOL
@@ -1625,6 +1646,7 @@ type PAINTSTRUCT struct {
 	RgbReserved [32]byte
 }
 
+// MINMAXINFO 窗口最小最大信息结构
 type MINMAXINFO struct {
 	PtReserved     POINT
 	PtMaxSize      POINT
@@ -1633,6 +1655,7 @@ type MINMAXINFO struct {
 	PtMaxTrackSize POINT
 }
 
+// NONCLIENTMETRICS 非客户端区域度量结构
 type NONCLIENTMETRICS struct {
 	CbSize           uint32
 	IBorderWidth     int32
@@ -1651,6 +1674,7 @@ type NONCLIENTMETRICS struct {
 	LfMessageFont    LOGFONT
 }
 
+// MEASUREITEMSTRUCT 测量项结构
 type MEASUREITEMSTRUCT struct {
 	CtlType    uint32
 	CtlID      uint32
@@ -1660,6 +1684,7 @@ type MEASUREITEMSTRUCT struct {
 	ItemData   uintptr
 }
 
+// DRAWITEMSTRUCT 绘制项结构
 type DRAWITEMSTRUCT struct {
 	CtlType    uint32
 	CtlID      uint32
@@ -1774,10 +1799,12 @@ type DLGTEMPLATEEX struct {
 	FontType    [0]uint16
 }
 
+// 从 LPARAM 中提取 X 坐标
 func GET_X_LPARAM(lp uintptr) int32 {
 	return int32(LOWORD(int32(lp)))
 }
 
+// 从 LPARAM 中提取 Y 坐标
 func GET_Y_LPARAM(lp uintptr) int32 {
 	return int32(HIWORD(int32(lp)))
 }
@@ -2999,7 +3026,7 @@ func LoadString(instRes HINSTANCE, id uint32, buf *uint16, length int32) int32 {
 //	MB_ICONHAND (See MB_ICONERROR)
 //	MB_ICONINFORMATION (The sounds specified as the windows Asterisk sound)
 //	MB_ICONQUESTION (The sound specified as the windows Question sound)
-// 	MB_ICONSTOP (See MB_ICONERROR)
+//	MB_ICONSTOP (See MB_ICONERROR)
 //	MB_ICONWARNING (The sounds specified as the windows Exclamation sound)
 //	MB_OK (The sound specified as the windows Default Beep sound)
 //
