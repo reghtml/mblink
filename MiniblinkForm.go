@@ -2,6 +2,8 @@ package GoMiniblink
 
 import (
 	"fmt"
+	"syscall"
+	"unsafe"
 
 	fm "github.com/reghtml/mblink/forms"
 	br "github.com/reghtml/mblink/forms/bridge"
@@ -59,6 +61,8 @@ func (_this *MiniblinkForm) InitEx(param br.FormParam) *MiniblinkForm {
 	_this.setDrop()
 	// 自动启用 setSize JavaScript 函数
 	_this.enableSetSizeJsFunc()
+	// 注册窗口操作和系统函数
+	_this.registerSystemFunctions()
 	return _this
 }
 
@@ -230,67 +234,42 @@ func (_this *MiniblinkForm) setFormFn(frame FrameContext) {
 			};
 			window.setFormButton=function(){
 				// 使用事件委托处理所有按钮点击，避免 DOM 更新后事件丢失的问题
-				// 每次调用时重新绑定，确保事件监听器始终有效
-				if(document.addEventListener){
-					// 移除旧的监听器（如果存在）
-					if(mbFormClickHandler){
-						document.removeEventListener("click", mbFormClickHandler, true);
-					}
+				if(document.addEventListener && !mbFormClickHandler){
 					mbFormClickHandler = function(e){
 						var target = e.target || e.srcElement;
 						if(!target.classList) return;
-						// 检查目标元素或其父元素是否包含按钮类名
-						while(target && target !== document){
-							if(target.classList){
-								if(target.classList.contains("mbform-max")){
-									e.preventDefault();
-									e.stopPropagation();
-									if(fnMax) fnMax();
-									return false;
-								}else if(target.classList.contains("mbform-min")){
-									e.preventDefault();
-									e.stopPropagation();
-									if(fnMin) fnMin();
-									return false;
-								}else if(target.classList.contains("mbform-close")){
-									e.preventDefault();
-									e.stopPropagation();
-									if(fnClose) fnClose();
-									return false;
-								}
-							}
-							target = target.parentElement;
+						if(target.classList.contains("mbform-max")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMax) fnMax();
+							return false;
+						}else if(target.classList.contains("mbform-min")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMin) fnMin();
+							return false;
+						}else if(target.classList.contains("mbform-close")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnClose) fnClose();
+							return false;
 						}
 					};
 					document.addEventListener("click", mbFormClickHandler, true);
 				}
 				// 处理双击 .mbform-dbmax 元素，执行与单击 .mbform-max 相同的功能
-				if(document.addEventListener){
-					// 移除旧的监听器（如果存在）
-					if(mbFormDblClickHandler){
-						document.removeEventListener("dblclick", mbFormDblClickHandler, true);
-					}
+				if(document.addEventListener && !mbFormDblClickHandler){
 					mbFormDblClickHandler = function(e){
 						var target = e.target || e.srcElement;
 						if(!target.classList) return;
-						// 检查目标元素或其父元素是否包含 mbform-dbmax 类名
-						while(target && target !== document){
-							if(target.classList && target.classList.contains("mbform-dbmax")){
-								e.preventDefault();
-								e.stopPropagation();
-								if(fnMax) fnMax();
-								return false;
-							}
-							target = target.parentElement;
+						if(target.classList.contains("mbform-dbmax")){
+							e.preventDefault();
+							e.stopPropagation();
+							if(fnMax) fnMax();
+							return false;
 						}
 					};
 					document.addEventListener("dblclick", mbFormDblClickHandler, true);
-				}
-				// 定期重新绑定，防止长时间不操作后失效（每3分钟重新绑定一次）
-				if(!window.mbFormButtonTimer){
-					window.mbFormButtonTimer = setInterval(function(){
-						window.setFormButton();
-					}, 3 * 60 * 1000);
 				}
 			};
 	`
@@ -356,5 +335,66 @@ func (_this *MiniblinkForm) enableSetSizeJsFunc() {
 		h := int(height)
 		pos := int(position)
 		_this.SetSizeAndPosition(w, h, pos)
+	})
+}
+
+// registerSystemFunctions 注册系统相关的 JavaScript 函数
+func (_this *MiniblinkForm) registerSystemFunctions() {
+	// 窗口操作函数 - 关闭窗口
+	_this.View.JsFuncEx("mb_close", func() {
+		hwnd := gw.HWND(_this.GetHandle())
+		if hwnd != 0 {
+			gw.PostMessage(hwnd, gw.WM_CLOSE, 0, 0)
+		}
+	})
+
+	// 窗口操作函数 - 最小化窗口
+	_this.View.JsFuncEx("mb_minimize", func() {
+		hwnd := gw.HWND(_this.GetHandle())
+		if hwnd != 0 {
+			gw.ShowWindow(hwnd, gw.SW_MINIMIZE)
+		}
+	})
+
+	// 窗口操作函数 - 最大化/还原窗口
+	_this.View.JsFuncEx("mb_maximize", func() {
+		hwnd := gw.HWND(_this.GetHandle())
+		if hwnd != 0 {
+			// 检查当前窗口状态
+			var placement gw.WINDOWPLACEMENT
+			placement.Length = uint32(unsafe.Sizeof(placement))
+			if gw.GetWindowPlacement(hwnd, &placement) {
+				// 如果当前是最大化状态，则还原；否则最大化
+				if placement.ShowCmd == gw.SW_SHOWMAXIMIZED {
+					gw.ShowWindow(hwnd, gw.SW_RESTORE)
+				} else {
+					gw.ShowWindow(hwnd, gw.SW_SHOWMAXIMIZED)
+				}
+			} else {
+				// 如果获取状态失败，直接切换最大化
+				gw.ShowWindow(hwnd, gw.SW_SHOWMAXIMIZED)
+			}
+		}
+	})
+
+	// 用默认浏览器打开网址，使用 Windows API ShellExecute，更安全不易触发杀毒软件
+	_this.View.JsFuncEx("mb_browser", func(url string) {
+		go func() {
+			shell32 := syscall.NewLazyDLL("shell32.dll")
+			shellExecute := shell32.NewProc("ShellExecuteW")
+			const SW_SHOWNORMAL = 1
+
+			urlPtr, _ := syscall.UTF16PtrFromString(url)
+			operation, _ := syscall.UTF16PtrFromString("open")
+
+			shellExecute.Call(
+				0,                                  // hwnd
+				uintptr(unsafe.Pointer(operation)), // lpOperation
+				uintptr(unsafe.Pointer(urlPtr)),    // lpFile
+				0,                                  // lpParameters
+				0,                                  // lpDirectory
+				SW_SHOWNORMAL,                      // nShowCmd
+			)
+		}()
 	})
 }
